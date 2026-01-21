@@ -6,45 +6,85 @@ const { ContactPage } = require('../pageObjects/ContactPage');
 const { AccountPage } = require('../pageObjects/AccountPage');
 const { LoginPageObjects } = require('../pageObjectLocators/LoginPageObjects');
 
+// CPQ Pages
+const { QLEPage } = require('../pageObjects/QLEPage');
+const { OrderPage } = require('../pageObjects/OrderPage');
+
 class POManager {
 
-    constructor(page) {
+    constructor(page, utilityFunctions) {
         this.page = page;
+        this.utils = utilityFunctions;
+
+        // 🔐 Core Pages
         this.loginPage = new LoginPage(this.page);
-        this.opportunityPage = new OpportunityPage(this.page);
-        this.quotePage = new QuotePage(this.page);
+
+        // 🧾 Hybrid (UI + API) Pages
+        this.accountPage = new AccountPage(this.page, this.utils);
+        this.opportunityPage = new OpportunityPage(this.page, this.utils);
+       // this.quotePage = new QuotePage(this.page, this.utils);
+
+        // Optional / existing pages
         this.contractPage = new ContractPage(this.page);
         this.contactPage = new ContactPage(this.page);
-        this.accountPage = new AccountPage(this.page);
         this.loginPageObjects = new LoginPageObjects(this.page);
+
+        // CPQ
+        this.qlePage = new QLEPage(this.page);
+        this.orderPage = new OrderPage(this.page);
     }
 
-    getLoginPage() {
-        return this.loginPage;
+    // =========================
+    // Getters
+    // =========================
+    getLoginPage() { return this.loginPage; }
+    getAccountPage() { return this.accountPage; }
+    getOpportunityPage() { return this.opportunityPage; }
+    getQuotePage() { return this.quotePage; }
+    getContractPage() { return this.contractPage; }
+    getContactPage() { return this.contactPage; }
+    getLoginPageObjects() { return this.loginPageObjects; }
+    getQLEPage() { return this.qlePage; }
+    getOrderPage() { return this.orderPage; }
+
+    // =========================
+    // 🌟 HYBRID FLOW HELPERS (API-first)
+    // =========================
+
+    /**
+     * Create Account (API-first)
+     */
+    async createAccountHybrid(useAPI = true) {
+        return await this.accountPage.createAccount(null, useAPI);
     }
 
-    getOpportunityPage() {
-        return this.opportunityPage;
+    /**
+     * Create Opportunity (API-first)
+     */
+    async createOpportunityHybrid(accountId, useAPI = true) {
+        return await this.opportunityPage.createOpportunity(null, useAPI, accountId);
     }
 
-    getQuotePage() {
-        return this.quotePage;
+    /**
+     * Create Quote (API-first)
+     */
+    async createQuoteHybrid(opportunity, useAPI = true) {
+        return await this.opportunityPage.createCPQQuote(opportunity, useAPI);
     }
 
-    getContractPage() {
-        return this.contractPage;
-    } 
+    /**
+     * Create Order (API-first)
+     */
+    async createOrderHybrid(quoteId, useAPI = true) {
+        return await this.orderPage.createOrder(null, useAPI, quoteId);
+    }
 
-    getContactPage() {
-        return this.contactPage;
-    } 
-    
-    getAccountPage() {
-        return this.accountPage;
-    } 
-
-    getLoginPageObjects(){
-        return this.loginPageObjects;
+    /**
+     * Activate Order (API-first)
+     */
+    async activateOrderHybrid(orderId, useAPI = true) {
+        return await this.orderPage.activateOrder(null, useAPI, orderId);
     }
 }
+
 module.exports = { POManager };

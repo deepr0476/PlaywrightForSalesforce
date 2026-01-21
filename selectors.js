@@ -1,0 +1,98 @@
+const { chromium } = require('playwright');
+
+(async () => {
+  const browser = await chromium.launch({
+    headless: false
+  });
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto('https://login.salesforce.com/');
+  await page.getByLabel('Username').click();
+  await page.getByLabel('Username').fill('raman@kns.com');
+  await page.getByLabel('Password').click();
+  await page.getByLabel('Password').fill('92614rgr@Bhl');
+  await page.getByLabel('Remember me').check();
+  await page.getByRole('button', { name: 'Log In' }).click();
+  await page.getByLabel('Verification Code').click();
+  await page.getByLabel('Verification Code').fill('448556');
+  await page.getByRole('button', { name: 'Verify' }).click();
+  await page.goto('https://kns5-dev-ed.develop.lightning.force.com/lightning/setup/SetupOneHome/home');
+  await page.getByRole('button', { name: 'App Launcher' }).click();
+  await page.getByRole('button', { name: 'App Launcher' }).click();
+  await page.getByPlaceholder('Search apps and items...').fill('sal');
+  await page.getByRole('option', { name: 'Salesforce CPQ' }).click();
+  await page.getByRole('link', { name: 'Accounts' }).click();
+  await page.getByRole('button', { name: 'Dismiss' }).click();
+  await page.getByRole('button', { name: 'New' }).click();
+  await page.getByLabel('*Account Name').click();
+  await page.getByLabel('*Account Name').fill('test raman ');
+  await page.getByLabel('*Account Name').press('Tab');
+  await page.getByRole('combobox', { name: 'Rating' }).click();
+  await page.getByRole('combobox', { name: 'Rating' }).click();
+  await page.getByText('Hot').click();
+  await page.getByRole('textbox', { name: 'Phone' }).click();
+  await page.getByRole('textbox', { name: 'Phone' }).fill('990909');
+  await page.getByRole('group', { name: 'Billing Address' }).locator('lightning-textarea').click();
+  await page.getByLabel('Billing Street').fill('raj street ');
+  await page.getByLabel('Billing City').click();
+  await page.getByLabel('Billing City').fill('Kolkata');
+  await page.getByLabel('Billing State/Province').click();
+  await page.getByLabel('Billing State/Province').fill('WB');
+  await page.getByLabel('Billing Zip/Postal Code').click();
+  await page.getByLabel('Billing Zip/Postal Code').fill('320909');
+  await page.getByLabel('Billing Country').click();
+  await page.getByLabel('Billing Country').fill('India');
+  await page.getByLabel('Shipping Street').click();
+  await page.getByLabel('Shipping Street').fill('raj street ');
+  await page.getByLabel('Shipping City').click();
+  await page.getByLabel('Shipping City').fill('Kolkata ');
+  await page.getByLabel('Shipping State/Province').click();
+  await page.getByLabel('Shipping State/Province').fill('WB');
+  await page.getByLabel('Shipping Zip/Postal Code').click();
+  await page.getByLabel('Shipping Zip/Postal Code').fill('320909');
+  await page.getByLabel('Shipping Country').click();
+  await page.getByLabel('Shipping Country').fill('India');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'New Opportunity' }).click();
+  await page.getByLabel('Opportunity Name').click();
+  await page.getByLabel('Opportunity Name').fill('test qa opp');
+  await page.getByLabel('Stage').click();
+  await page.getByRole('option', { name: 'Prospecting' }).click();
+  await page.getByLabel('Amount').click();
+  await page.getByLabel('Amount').fill('20000');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('link', { name: 'Opportunities (1)' }).click();
+  await page.getByRole('link', { name: 'test qa opp', exact: true }).click();
+  await page.getByRole('button', { name: 'New Quote' }).click();
+  await page.getByLabel('PrimaryHelp Primary').check();
+  await page.getByLabel('Start Date', { exact: true }).click();
+  await page.getByText('12', { exact: true }).click();
+  await page.getByLabel('End Date', { exact: true }).click();
+  await page.getByRole('link', { name: 'Go to next month' }).click({
+    clickCount: 3
+  });
+  await page.getByText('30', { exact: true }).click();
+  await page.getByLabel('Subscription Term', { exact: true }).click();
+  await page.getByLabel('Subscription Term', { exact: true }).fill('7');
+  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByLabel('Quotes').getByRole('link', { name: 'Q-' }).click();
+  await page.getByRole('button', { name: 'Edit Lines' }).click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').locator('#pricebookDialog').getByRole('button', { name: 'Save' }).click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').getByRole('button', { name: 'Add Products' }).click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').locator('sb-swipe-container').filter({ hasText: '10KWHBATTERY 10kWh Battery' }).getByRole('checkbox').click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').getByRole('button', { name: 'Select', exact: true }).click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').getByRole('button', { name: 'Calculate' }).click();
+  await page.frameLocator('iframe[name="vfFrameId_1767880820228"]').getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('button', { name: 'Show more actions' }).click();
+  await page.getByRole('button', { name: 'Show more actions' }).click();
+  await page.getByRole('button', { name: 'Create Order' }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.getByRole('tab', { name: 'Details' }).click();
+  await page.getByRole('button', { name: 'Activate' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Activate' }).click();
+  await page.close();
+
+  // ---------------------
+  await context.close();
+  await browser.close();
+})();

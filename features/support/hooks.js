@@ -5,7 +5,7 @@ const { devices } = require('playwright');
 
 Before(async function () {
       //Setting up first browser page
-      this.browser = await playwright.chromium.launch({headless: true});
+      this.browser = await playwright.chromium.launch({ headless: false, slowMo: 100 });
       this.requestContext = await playwright.request.newContext();
       //this.iphone13 = devices['iPad Pro 11 landscape'];
       /*this.context = await this.browser.newContext({
@@ -23,10 +23,15 @@ Before(async function () {
 
 
 After(async function () {
-    //Test data cleanup for contract
-    await this.opportunityPage.testDataCleanupOpportunity(this.LocalTestData, this.utilityFunctionLocal);
 
-    //Close all browserss
-    await this.context.close();
+    if (!this.TestData || !this.TestData.get("OpportunityName")) {
+        console.log("⚠️ No Opportunity created. Cleanup skipped.");
+        return;
+    }
+
+    await this.opportunityPage.testDataCleanupOpportunity(
+        this.TestData,
+        this.utilityFunction
+    );
 });
 

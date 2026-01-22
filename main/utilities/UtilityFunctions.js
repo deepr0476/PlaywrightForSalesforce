@@ -1,5 +1,5 @@
 // =========================
-// UtilityFunctions.js (FINAL – API + JWT READY)
+// UtilityFunctions.js (FINAL – CPQ SAFE)
 // =========================
 
 require('dotenv').config();
@@ -18,49 +18,27 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🔐 ENV + CREDENTIALS
-    // =========================
-    async fetchEnvironmentCreds() {
-        if (
-            !process.env.SF_USERNAME ||
-            !process.env.SF_CLIENT_ID ||
-            !process.env.PRIVATE_KEY_PATH ||
-            !process.env.SF_LOGIN_URL
-        ) {
-            throw new Error("❌ Missing Salesforce API credentials in .env file");
-        }
-
-        return {
-            username: process.env.SF_USERNAME,
-            clientId: process.env.SF_CLIENT_ID,
-            loginUrl: process.env.SF_LOGIN_URL,
-            privateKeyPath: process.env.PRIVATE_KEY_PATH
-        };
-    }
-
-    // =========================
-    // 🔑 JWT → ACCESS TOKEN
+    // 🔐 JWT TOKEN
     // =========================
     async getAccessToken() {
         if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
             return this.accessToken;
         }
 
-        const secrets = await this.fetchEnvironmentCreds();
-        const privateKey = fs.readFileSync(secrets.privateKeyPath, 'utf8');
+        const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
 
         const jwtToken = jwt.sign(
             {
-                iss: secrets.clientId,
-                sub: secrets.username,
-                aud: secrets.loginUrl
+                iss: process.env.SF_CLIENT_ID,
+                sub: process.env.SF_USERNAME,
+                aud: process.env.SF_LOGIN_URL
             },
             privateKey,
             { algorithm: 'RS256', expiresIn: '3m' }
         );
 
-        const response = await axios.post(
-            `${secrets.loginUrl}/services/oauth2/token`,
+        const res = await axios.post(
+            `${process.env.SF_LOGIN_URL}/services/oauth2/token`,
             null,
             {
                 params: {
@@ -70,161 +48,110 @@ class UtilityFunctions {
             }
         );
 
-        this.accessToken = response.data.access_token;
-        this.instanceUrl = response.data.instance_url;
-        this.tokenExpiry = new Date(Date.now() + 55 * 60 * 1000); // 55 min
+        this.accessToken = res.data.access_token;
+        this.instanceUrl = res.data.instance_url;
+        this.tokenExpiry = new Date(Date.now() + 55 * 60 * 1000);
 
         return this.accessToken;
     }
-
+   
     // =========================
-    // 🔨 GENERIC API REQUEST
+    // 🔨 GENERIC API CALL
     // =========================
     async apiRequest(method, endpoint, data = null) {
         const token = await this.getAccessToken();
 
-        const response = await axios({
-            method,
-            url: `${this.instanceUrl}/services/data/v57.0/${endpoint}`,
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            data
-        });
+        try {
+            const res = await axios({
+                method,
+                url: `${this.instanceUrl}/services/data/v57.0/${endpoint}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                data
+            });
 
-        return response.data;
-    }
-
-    // =========================
-    // 🎲 TEST DATA (FAKER ONLY)
-    // =========================
-    async generateRandomAccountData() {
-        return {
-            Name: `TestAccount_${faker.number.int({ min: 1000, max: 9999 })}`,
-            Phone: faker.phone.number('9#########'),
-            BillingStreet: faker.location.streetAddress(),
-            BillingCity: faker.location.city(),
-            BillingState: faker.location.state({ abbreviated: true }),
-            BillingPostalCode: faker.location.zipCode(),
-            BillingCountry: faker.location.country()
-        };
-    }
-
-    async generateRandomOpportunityData() {
-        return {
-            Name: `TestOpp_${faker.number.int({ min: 1000, max: 9999 })}`,
-            StageName: faker.helpers.arrayElement([
-                'Prospecting',
-                'Qualification',
-                'Needs Analysis'
-            ]),
-            CloseDate: new Date().toISOString().split('T')[0],
-            Amount: faker.finance.amount(1000, 50000, 2)
-        };
-    }
-
-    async generateRandomQuoteData() {
-        const start = new Date();
-        const end = new Date();
-        end.setDate(start.getDate() + 30);
-
-        return {
-            StartDate: start.toISOString().split('T')[0],
-            EndDate: end.toISOString().split('T')[0],
-            SubscriptionTerm: faker.number.int({ min: 1, max: 12 })
-        };
-    }
-
-    async generateRandomOrderData() {
-        return {
-            EffectiveDate: new Date().toISOString().split('T')[0],
-            Description: `Order_${faker.number.int({ min: 1000, max: 9999 })}`
-        };
-    }
-
-    // =========================
-    // ⚡ API CREATE HELPERS
-    // =========================
-    async createAccountViaAPI(data = null) {
-        const accountData =
-            data && typeof data === 'object'
-                ? data
-                : await this.generateRandomAccountData();
-
-        const result = await this.apiRequest(
-            'post',
-            'sobjects/Account/',
-            accountData
-        );
-
-        return result.id;
-    }
-
-    async createOpportunityViaAPI(accountId, data = null) {
-        if (!accountId) {
-            throw new Error("❌ accountId is required to create Opportunity");
+            return res.data;
+        } catch (err) {
+            console.error('❌ API Request Failed:', err.response?.data || err.message);
+            throw err;
         }
-
-        const oppData =
-            data && typeof data === 'object'
-                ? data
-                : await this.generateRandomOpportunityData();
-
-        oppData.AccountId = accountId;
-
-        const result = await this.apiRequest(
-            'post',
-            'sobjects/Opportunity/',
-            oppData
-        );
-
-        return result.id;
     }
 
-    async createQuoteViaAPI(opportunityId, accountId, data = null) {
-        if (!opportunityId || !accountId) {
-            throw new Error("❌ opportunityId & accountId are required");
-        }
-
-        const quoteData =
-            data && typeof data === 'object'
-                ? data
-                : await this.generateRandomQuoteData();
-
-        quoteData.OpportunityId = opportunityId;
-        quoteData.AccountId = accountId;
-
-        const result = await this.apiRequest(
-            'post',
-            'sobjects/Quote/',
-            quoteData
+    // =========================
+    // 🧾 PRICEBOOK (MANDATORY)
+    // =========================
+    async getStandardPricebookId() {
+        const res = await this.apiRequest(
+            'get',
+            `query/?q=SELECT+Id+FROM+Pricebook2+WHERE+IsStandard=true+LIMIT+1`
         );
-
-        return result.id;
+        return res.records[0].Id;
     }
 
-    async createOrderViaAPI(accountId, quoteId, data = null) {
-        if (!accountId || !quoteId) {
-            throw new Error("❌ accountId & quoteId are required");
-        }
-
-        const orderData =
-            data && typeof data === 'object'
-                ? data
-                : await this.generateRandomOrderData();
-
-        orderData.AccountId = accountId;
-        orderData.QuoteId = quoteId;
-
-        const result = await this.apiRequest(
+    // =========================
+    // 🏢 ACCOUNT
+    // =========================
+    async createAccountViaAPI() {
+        const res = await this.apiRequest(
             'post',
-            'sobjects/Order/',
-            orderData
+            'sobjects/Account',
+            {
+                Name: `Account_${faker.number.int({ min: 1000, max: 9999 })}`
+            }
         );
-
-        return result.id;
+        return res.id;
     }
+
+    // =========================
+    // 💼 OPPORTUNITY
+    // =========================
+    async createOpportunityViaAPI(accountId) {
+        const res = await this.apiRequest(
+            'post',
+            'sobjects/Opportunity',
+            {
+                Name: `Opp_${faker.number.int({ min: 1000, max: 9999 })}`,
+                StageName: 'Prospecting',
+                CloseDate: new Date().toISOString().split('T')[0],
+                AccountId: accountId
+            }
+        );
+        return res.id;
+    }
+
+    // =========================
+   // =========================
+// 🧾 CREATE CPQ QUOTE (API)
+// =========================
+async createQuoteViaAPI(opportunityId, accountId, data = null) {
+    if (!opportunityId || !accountId) {
+        throw new Error('❌ opportunityId & accountId are required for Quote');
+    }
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(startDate.getMonth() + 12);
+
+    const quoteData = data || {
+        SBQQ__Opportunity2__c: opportunityId,
+        SBQQ__Account__c: accountId,
+        SBQQ__Primary__c: true,
+        SBQQ__SubscriptionTerm__c: 12,
+        SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
+        SBQQ__EndDate__c: endDate.toISOString().split('T')[0]
+    };
+
+    const result = await this.apiRequest(
+        'post',
+        'sobjects/SBQQ__Quote__c/',
+        quoteData
+    );
+
+    return result.id;
+}
+
 }
 
 module.exports = { UtilityFunctions };

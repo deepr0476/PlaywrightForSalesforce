@@ -10,7 +10,7 @@ class QLEPage {
   }
 
   async addProductAndCalculate() {
-
+  
     // ⚠️ CPQ iframe 
     const qleFrame = this.page.frameLocator('iframe[name^="vfFrameId_"]');
 

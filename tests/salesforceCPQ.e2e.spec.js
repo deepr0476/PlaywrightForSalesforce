@@ -6,7 +6,7 @@ const { UtilityFunctions } = require('../main/utilities/UtilityFunctions');
 
 test.describe('Salesforce CPQ – API Foundation Flow', () => {
 
-    test('Login → Create Account → Create Opportunity (API)', async ({ page }) => {
+    test('Login → Create Account → Create Opportunity → Create Quote (API)', async ({ page }) => {
 
         // =========================
         // 🔧 Utilities + PO Manager
@@ -19,32 +19,31 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         // =========================
         const loginPage = poManager.getLoginPage();
 
-// 1. Token fetch (API)
-const accessToken = await utils.getAccessToken();
+        // 1. Token fetch (API)
+        const accessToken = await utils.getAccessToken();
 
-// 2. UI login using Frontdoor
-await loginPage.loginWithToken(accessToken);
-
-console.log('✅ Login successful');
+        // 2. UI login using Frontdoor
+        await loginPage.loginWithToken(accessToken);
+        console.log('✅ Login successful');
 
         // =========================
         // 🏢 CREATE ACCOUNT (API)
         // =========================
-        const accountPage = poManager.getAccountPage();
-        const accountId = await accountPage.createAccount(null, true);
+        const accountId = await poManager.createAccountHybrid(true);
         console.log(`✅ Account ID: ${accountId}`);
 
         // =========================
         // 💼 CREATE OPPORTUNITY (API)
         // =========================
-        const opportunityPage = poManager.getOpportunityPage();
-        const opportunityId = await opportunityPage.createOpportunity(
-            null,
-            true,
-            accountId
-        );
-
+        const opportunityId = await poManager.createOpportunityHybrid(accountId, true);
         console.log(`✅ Opportunity ID: ${opportunityId}`);
+
+        // =========================
+        // 📝 CREATE QUOTE (API preferred)
+        // =========================
+       const quoteId = await utils.createQuoteViaAPI(opportunityId, accountId);
+        console.log('✅ Quote ID:', quoteId);
+
 
         // =========================
         // ✅ TEST END
@@ -53,3 +52,5 @@ console.log('✅ Login successful');
     });
 
 });
+
+

@@ -8,4 +8,4 @@ class ContactPage {
 
     
 }
-module.exports = { ContactPage };
+module.exports = { ContactPage }; 

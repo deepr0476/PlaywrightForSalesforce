@@ -10,7 +10,7 @@ class OrderPage {
     // Show more actions
     await this.page.getByRole('button', { name: 'Show more actions' }).click();
     await this.page.getByRole('button', { name: 'Create Order' }).click();
-
+  
     // Save Order
     await this.page.getByRole('button', { name: 'Save', exact: true }).click();
 

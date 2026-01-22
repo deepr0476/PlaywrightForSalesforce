@@ -22,3 +22,4 @@ require('dotenv').config();
 
   console.log('Current URL:', page.url());
 })();
+ 

@@ -22,7 +22,9 @@ class POManager {
         // 🧾 Hybrid (UI + API) Pages
         this.accountPage = new AccountPage(this.page, this.utils);
         this.opportunityPage = new OpportunityPage(this.page, this.utils);
-       // this.quotePage = new QuotePage(this.page, this.utils);
+
+        // QuotePage properly initialized with page + utils
+        this.quotePage = new QuotePage(this.page, this.utils);
 
         // Optional / existing pages
         this.contractPage = new ContractPage(this.page);
@@ -68,23 +70,37 @@ class POManager {
     /**
      * Create Quote (API-first)
      */
-    async createQuoteHybrid(opportunity, useAPI = true) {
-        return await this.opportunityPage.createCPQQuote(opportunity, useAPI);
+    async createQuoteHybrid(opportunityId, accountId, useAPI = true) {
+        if (useAPI) {
+            // Using UtilityFunctions API helper directly
+            return await this.utils.createQuoteViaAPI(opportunityId, accountId);
+        } else {
+            // Fallback to UI
+            return await this.quotePage.createQuote(opportunityId);
+        }
     }
 
     /**
      * Create Order (API-first)
      */
-    async createOrderHybrid(quoteId, useAPI = true) {
-        return await this.orderPage.createOrder(null, useAPI, quoteId);
+    async createOrderHybrid(accountId, quoteId, useAPI = true) {
+        if (useAPI) {
+            return await this.utils.createOrderViaAPI(accountId, quoteId);
+        } else {
+            return await this.orderPage.createOrder(null, false, quoteId);
+        }
     }
 
     /**
      * Activate Order (API-first)
      */
     async activateOrderHybrid(orderId, useAPI = true) {
-        return await this.orderPage.activateOrder(null, useAPI, orderId);
+        if (useAPI) {
+            return await this.orderPage.activateOrder(orderId, true);
+        } else {
+            return await this.orderPage.activateOrder(orderId, false);
+        }
     }
 }
-
+  
 module.exports = { POManager };

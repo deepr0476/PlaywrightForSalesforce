@@ -1,5 +1,5 @@
 // =========================
-// UtilityFunctions.js (FINAL – CPQ SAFE)
+// UtilityFunctions.js (FINAL – CPQ SAFE, CONTACT LINK FIXED)
 // =========================
 
 require('dotenv').config();
@@ -80,17 +80,6 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🧾 PRICEBOOK (MANDATORY)
-    // =========================
-    async getStandardPricebookId() {
-        const res = await this.apiRequest(
-            'get',
-            `query/?q=SELECT+Id+FROM+Pricebook2+WHERE+IsStandard=true+LIMIT+1`
-        );
-        return res.records[0].Id;
-    }
-
-    // =========================
     // 🏢 ACCOUNT
     // =========================
     async createAccountViaAPI() {
@@ -101,6 +90,31 @@ class UtilityFunctions {
                 Name: `Account_${faker.number.int({ min: 1000, max: 9999 })}`
             }
         );
+        return res.id;
+    }
+
+    // =========================
+    // 👤 CONTACT (🔥 HARD LINK FIX)
+    // =========================
+    async createContactViaAPI(accountId, data = {}) {
+        if (!accountId) {
+            throw new Error('❌ accountId is required to create Contact');
+        }
+
+        // ✅ ALWAYS force AccountId (even if data is passed)
+        const contactData = {
+            Salutation: 'Mr.',
+            LastName: faker.person.lastName(),
+            ...data,
+            AccountId: accountId
+        };
+
+        const res = await this.apiRequest(
+            'post',
+            'sobjects/Contact',
+            contactData
+        );
+
         return res.id;
     }
 
@@ -122,36 +136,34 @@ class UtilityFunctions {
     }
 
     // =========================
-   // =========================
-// 🧾 CREATE CPQ QUOTE (API)
-// =========================
-async createQuoteViaAPI(opportunityId, accountId, data = null) {
-    if (!opportunityId || !accountId) {
-        throw new Error('❌ opportunityId & accountId are required for Quote');
+    // 🧾 CREATE CPQ QUOTE (API)
+    // =========================
+    async createQuoteViaAPI(opportunityId, accountId, data = null) {
+        if (!opportunityId || !accountId) {
+            throw new Error('❌ opportunityId & accountId are required for Quote');
+        }
+
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(startDate.getMonth() + 12);
+
+        const quoteData = data || {
+            SBQQ__Opportunity2__c: opportunityId,
+            SBQQ__Account__c: accountId,
+            SBQQ__Primary__c: true,
+            SBQQ__SubscriptionTerm__c: 12,
+            SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
+            SBQQ__EndDate__c: endDate.toISOString().split('T')[0]
+        };
+
+        const result = await this.apiRequest(
+            'post',
+            'sobjects/SBQQ__Quote__c/',
+            quoteData
+        );
+
+        return result.id;
     }
-
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setMonth(startDate.getMonth() + 12);
-
-    const quoteData = data || {
-        SBQQ__Opportunity2__c: opportunityId,
-        SBQQ__Account__c: accountId,
-        SBQQ__Primary__c: true,
-        SBQQ__SubscriptionTerm__c: 12,
-        SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
-        SBQQ__EndDate__c: endDate.toISOString().split('T')[0]
-    };
-
-    const result = await this.apiRequest(
-        'post',
-        'sobjects/SBQQ__Quote__c/',
-        quoteData
-    );
-
-    return result.id;
-}
-
 }
 
 module.exports = { UtilityFunctions };

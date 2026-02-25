@@ -28,7 +28,8 @@ class POManager {
 
         // Optional / existing pages
         this.contractPage = new ContractPage(this.page);
-        this.contactPage = new ContactPage(this.page);
+        this.contactPage = new ContactPage(this.page, this.utils);
+
         this.loginPageObjects = new LoginPageObjects(this.page);
 
         // CPQ
@@ -72,12 +73,17 @@ class POManager {
      */
     async createQuoteHybrid(opportunityId, accountId, useAPI = true) {
         if (useAPI) {
-            // Using UtilityFunctions API helper directly
             return await this.utils.createQuoteViaAPI(opportunityId, accountId);
         } else {
-            // Fallback to UI
             return await this.quotePage.createQuote(opportunityId);
         }
+    }
+
+    /**
+     * Create Contact (API-first)
+     */
+    async createContactHybrid(accountId, data = null, useAPI = true) {
+        return await this.contactPage.createContact(accountId, data, useAPI);
     }
 
     /**
@@ -102,5 +108,5 @@ class POManager {
         }
     }
 }
-  
+
 module.exports = { POManager };

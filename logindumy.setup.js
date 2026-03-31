@@ -17,7 +17,7 @@ require('dotenv').config();
 
   await page.goto(frontdoorUrl, { waitUntil: 'domcontentloaded' });
 
-  // URL wait mat karo, Lightning thoda drama karta hai
+  // URL wait no longer needed as we are waiting for domcontentloaded
   await page.waitForTimeout(5000);
 
   console.log('Current URL:', page.url());

@@ -101,7 +101,6 @@ class UtilityFunctions {
             throw new Error('❌ accountId is required to create Contact');
         }
 
-        // ✅ ALWAYS force AccountId (even if data is passed)
         const contactData = {
             Salutation: 'Mr.',
             LastName: faker.person.lastName(),
@@ -163,6 +162,28 @@ class UtilityFunctions {
         );
 
         return result.id;
+    }
+
+    // =========================
+    // 📚 SET PRICEBOOK ON QUOTE (API)
+    // =========================
+    async setPricebookOnQuote(quoteId) {
+        // Standard Price Book ID fetch karo
+        const pbResult = await this.apiRequest(
+            'get',
+            'query?q=SELECT+Id+FROM+Pricebook2+WHERE+IsStandard=true+LIMIT+1'
+        );
+
+        const pricebookId = pbResult.records[0].Id;
+
+        // Quote pe pricebook set karo
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__Quote__c/${quoteId}`,
+            { SBQQ__PricebookId__c: pricebookId }
+        );
+
+        console.log(`✅ Pricebook set via API: ${pricebookId}`);
     }
 }
 

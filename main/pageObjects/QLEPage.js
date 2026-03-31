@@ -143,14 +143,16 @@ class QLEPage {
     // Step 7: Save
     // primary class = blue Save button
     // ─────────────────────────────────────────────
-    async saveQuoteLines() {
-       const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
-        await frame.getByRole('button', { name: 'Save', exact: true }).click();
-        console.log('💾 Save clicked');
+   async saveQuoteLines() {
+    const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
+    
+    await frame.getByRole('button', { name: 'Save', exact: true }).click();
+    console.log('💾 Save clicked');
 
-        await this.page.waitForLoadState('networkidle', { timeout: 45000 });
-        console.log('✅ Quote Lines saved successfully');
-    }
+    // networkidle hatao — Quote record page load hone ka wait karo
+    await this.page.waitForURL('**/lightning/r/SBQQ__Quote__c/**', { timeout: 45000 });
+    console.log('✅ Quote Lines saved successfully');
+}
 }
 
 module.exports = { QLEPage };

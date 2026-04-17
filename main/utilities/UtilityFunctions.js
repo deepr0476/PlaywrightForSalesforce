@@ -1,5 +1,5 @@
 // =========================
-// UtilityFunctions.js (FINAL – CPQ SAFE, CONTACT LINK FIXED)
+// UtilityFunctions.js (FINAL – CPQ SAFE + CONTACT FLOW FIX)
 // =========================
 
 require('dotenv').config();
@@ -17,9 +17,6 @@ class UtilityFunctions {
         this.tokenExpiry = null;
     }
 
-    // =========================
-    // 🔐 JWT TOKEN
-    // =========================
     async getAccessToken() {
         if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
             return this.accessToken;
@@ -54,10 +51,7 @@ class UtilityFunctions {
 
         return this.accessToken;
     }
-   
-    // =========================
-    // 🔨 GENERIC API CALL
-    // =========================
+
     async apiRequest(method, endpoint, data = null) {
         const token = await this.getAccessToken();
 
@@ -79,9 +73,6 @@ class UtilityFunctions {
         }
     }
 
-    // =========================
-    // 🏢 ACCOUNT
-    // =========================
     async createAccountViaAPI() {
         const res = await this.apiRequest(
             'post',
@@ -93,13 +84,8 @@ class UtilityFunctions {
         return res.id;
     }
 
-    // =========================
-    // 👤 CONTACT (🔥 HARD LINK FIX)
-    // =========================
     async createContactViaAPI(accountId, data = {}) {
-        if (!accountId) {
-            throw new Error('❌ accountId is required to create Contact');
-        }
+        if (!accountId) throw new Error('accountId required');
 
         const contactData = {
             Salutation: 'Mr.',
@@ -117,9 +103,6 @@ class UtilityFunctions {
         return res.id;
     }
 
-    // =========================
-    // 💼 OPPORTUNITY
-    // =========================
     async createOpportunityViaAPI(accountId) {
         const res = await this.apiRequest(
             'post',
@@ -134,26 +117,33 @@ class UtilityFunctions {
         return res.id;
     }
 
-    // =========================
-    // 🧾 CREATE CPQ QUOTE (API)
-    // =========================
-    async createQuoteViaAPI(opportunityId, accountId, data = null) {
+    // 🔥 UPDATED QUOTE FUNCTION (IMPORTANT FIX)
+    async createQuoteViaAPI(opportunityId, accountId, contactId = null, data = null) {
+
         if (!opportunityId || !accountId) {
-            throw new Error('❌ opportunityId & accountId are required for Quote');
+            throw new Error('opportunityId & accountId required');
         }
 
         const startDate = new Date();
         const endDate = new Date();
         endDate.setMonth(startDate.getMonth() + 12);
 
-        const quoteData = data || {
+        const quoteData = {
             SBQQ__Opportunity2__c: opportunityId,
             SBQQ__Account__c: accountId,
             SBQQ__Primary__c: true,
             SBQQ__SubscriptionTerm__c: 12,
             SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
-            SBQQ__EndDate__c: endDate.toISOString().split('T')[0]
+            SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
+            ...data
         };
+
+        // 🔥 DEBUG LOG
+        console.log("🔥 CONTACT ID IN QUOTE:", contactId);
+
+        if (contactId) {
+            quoteData.SBQQ__PrimaryContact__c = contactId;
+        }
 
         const result = await this.apiRequest(
             'post',
@@ -161,14 +151,12 @@ class UtilityFunctions {
             quoteData
         );
 
+        console.log("📦 QUOTE CREATED:", result);
+
         return result.id;
     }
 
-    // =========================
-    // 📚 SET PRICEBOOK ON QUOTE (API)
-    // =========================
     async setPricebookOnQuote(quoteId) {
-        // Standard Price Book ID fetch karo
         const pbResult = await this.apiRequest(
             'get',
             'query?q=SELECT+Id+FROM+Pricebook2+WHERE+IsStandard=true+LIMIT+1'
@@ -176,14 +164,13 @@ class UtilityFunctions {
 
         const pricebookId = pbResult.records[0].Id;
 
-        // Quote pe pricebook set karo
         await this.apiRequest(
             'patch',
             `sobjects/SBQQ__Quote__c/${quoteId}`,
             { SBQQ__PricebookId__c: pricebookId }
         );
 
-        console.log(`✅ Pricebook set via API: ${pricebookId}`);
+        console.log(`✅ Pricebook set: ${pricebookId}`);
     }
 }
 

@@ -23,6 +23,7 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
             Salutation: 'Mr.',
             LastName: `Contact_${Math.floor(Math.random() * 9000) + 1000}`
         };
+
         const contactId = await poManager.createContactHybrid(accountId, contactData, true);
         console.log(`✅ Contact created → ID: ${contactId}`);
 
@@ -30,6 +31,7 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
             'get',
             `sobjects/Contact/${contactId}?fields=Id,AccountId,LastName`
         );
+
         if (contactInfo.AccountId === accountId) {
             console.log('🔗 Contact correctly linked to Account');
         } else {
@@ -39,10 +41,16 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         const opportunityId = await poManager.createOpportunityHybrid(accountId, true);
         console.log(`✅ Opportunity created → ID: ${opportunityId}`);
 
-        const quoteId = await poManager.createQuoteHybrid(opportunityId, accountId, true);
+        // 🔥 FIX: contactId added here
+        const quoteId = await poManager.createQuoteHybrid(
+            opportunityId,
+            accountId,
+            contactId,   // ✅ ADDED
+            true
+        );
+
         console.log(`✅ Quote created → ID: ${quoteId}`);
 
-        // 🆕 Pricebook API se set karo — dialog nahi aayega!
         await utils.setPricebookOnQuote(quoteId);
 
         console.log('🎉 Full API flow (Account → Contact → Opportunity → Quote) completed successfully');

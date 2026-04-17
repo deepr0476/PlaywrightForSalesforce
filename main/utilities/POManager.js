@@ -6,7 +6,6 @@ const { ContactPage } = require('../pageObjects/ContactPage');
 const { AccountPage } = require('../pageObjects/AccountPage');
 const { LoginPageObjects } = require('../pageObjectLocators/LoginPageObjects');
 
-// CPQ Pages
 const { QLEPage } = require('../pageObjects/QLEPage');
 const { OrderPage } = require('../pageObjects/OrderPage');
 
@@ -16,30 +15,18 @@ class POManager {
         this.page = page;
         this.utils = utilityFunctions;
 
-        // 🔐 Core Pages
         this.loginPage = new LoginPage(this.page);
-
-        // 🧾 Hybrid (UI + API) Pages
         this.accountPage = new AccountPage(this.page, this.utils);
         this.opportunityPage = new OpportunityPage(this.page, this.utils);
-
-        // QuotePage properly initialized with page + utils
         this.quotePage = new QuotePage(this.page, this.utils);
-
-        // Optional / existing pages
         this.contractPage = new ContractPage(this.page);
         this.contactPage = new ContactPage(this.page, this.utils);
-
         this.loginPageObjects = new LoginPageObjects(this.page);
 
-        // CPQ
         this.qlePage = new QLEPage(this.page);
         this.orderPage = new OrderPage(this.page);
     }
 
-    // =========================
-    // Getters
-    // =========================
     getLoginPage() { return this.loginPage; }
     getAccountPage() { return this.accountPage; }
     getOpportunityPage() { return this.opportunityPage; }
@@ -50,45 +37,27 @@ class POManager {
     getQLEPage() { return this.qlePage; }
     getOrderPage() { return this.orderPage; }
 
-    // =========================
-    // 🌟 HYBRID FLOW HELPERS (API-first)
-    // =========================
-
-    /**
-     * Create Account (API-first)
-     */
     async createAccountHybrid(useAPI = true) {
         return await this.accountPage.createAccount(null, useAPI);
     }
 
-    /**
-     * Create Opportunity (API-first)
-     */
     async createOpportunityHybrid(accountId, useAPI = true) {
         return await this.opportunityPage.createOpportunity(null, useAPI, accountId);
     }
 
-    /**
-     * Create Quote (API-first)
-     */
-    async createQuoteHybrid(opportunityId, accountId, useAPI = true) {
+    // 🔥 FIXED: contactId now passed properly
+    async createQuoteHybrid(opportunityId, accountId, contactId = null, useAPI = true) {
         if (useAPI) {
-            return await this.utils.createQuoteViaAPI(opportunityId, accountId);
+            return await this.utils.createQuoteViaAPI(opportunityId, accountId, contactId);
         } else {
             return await this.quotePage.createQuote(opportunityId);
         }
     }
 
-    /**
-     * Create Contact (API-first)
-     */
     async createContactHybrid(accountId, data = null, useAPI = true) {
         return await this.contactPage.createContact(accountId, data, useAPI);
     }
 
-    /**
-     * Create Order (API-first)
-     */
     async createOrderHybrid(accountId, quoteId, useAPI = true) {
         if (useAPI) {
             return await this.utils.createOrderViaAPI(accountId, quoteId);
@@ -97,9 +66,6 @@ class POManager {
         }
     }
 
-    /**
-     * Activate Order (API-first)
-     */
     async activateOrderHybrid(orderId, useAPI = true) {
         if (useAPI) {
             return await this.orderPage.activateOrder(orderId, true);

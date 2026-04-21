@@ -45,7 +45,7 @@ class POManager {
         return await this.opportunityPage.createOpportunity(null, useAPI, accountId);
     }
 
-    // 🔥 FIXED: contactId now passed properly
+    // FIXED: contactId now passed properly
     async createQuoteHybrid(opportunityId, accountId, contactId = null, useAPI = true) {
         if (useAPI) {
             return await this.utils.createQuoteViaAPI(opportunityId, accountId, contactId);

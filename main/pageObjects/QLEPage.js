@@ -11,14 +11,13 @@ class QLEPage {
     // Step 1: Quote record page open karo
     // ─────────────────────────────────────────────
     async openQuoteRecord(quoteId) {
-        const instanceUrl = process.env.SF_INSTANCE_URL;
-        const url = `${instanceUrl}/lightning/r/SBQQ__Quote__c/${quoteId}/view`;
-
-        console.log(`🌐 Opening Quote: ${url}`);
-        await this.page.goto(url);
-        await this.page.waitForLoadState('networkidle');
-        console.log('✅ Quote record page loaded');
-    }
+    const url = `${process.env.SF_INSTANCE_URL}/lightning/r/SBQQ__Quote__c/${quoteId}/view`;
+    console.log(`🌐 Opening Quote: ${url}`);
+    await this.page.goto(url);
+    // networkidle hatao — URL based wait karo
+    await this.page.waitForURL('**/lightning/r/SBQQ__Quote__c/**', { timeout: 30000 });
+    console.log('✅ Quote record page loaded');
+}
 
     // ─────────────────────────────────────────────
     // Step 2: Edit Lines click karo

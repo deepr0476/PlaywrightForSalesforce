@@ -1,5 +1,5 @@
 // =========================
-// UtilityFunctions.js (FINAL – CPQ SAFE + CONTACT FLOW FIX)
+// UtilityFunctions.js (FINAL – CPQ SAFE + CONTACT FLOW FIX + PHASE 3)
 // =========================
 
 require('dotenv').config();
@@ -77,9 +77,7 @@ class UtilityFunctions {
         const res = await this.apiRequest(
             'post',
             'sobjects/Account',
-            {
-                Name: `Account_${faker.number.int({ min: 1000, max: 9999 })}`
-            }
+            { Name: `Account_${faker.number.int({ min: 1000, max: 9999 })}` }
         );
         return res.id;
     }
@@ -94,12 +92,7 @@ class UtilityFunctions {
             AccountId: accountId
         };
 
-        const res = await this.apiRequest(
-            'post',
-            'sobjects/Contact',
-            contactData
-        );
-
+        const res = await this.apiRequest('post', 'sobjects/Contact', contactData);
         return res.id;
     }
 
@@ -117,9 +110,7 @@ class UtilityFunctions {
         return res.id;
     }
 
-    // 🔥 UPDATED QUOTE FUNCTION (IMPORTANT FIX)
     async createQuoteViaAPI(opportunityId, accountId, contactId = null, data = null) {
-
         if (!opportunityId || !accountId) {
             throw new Error('opportunityId & accountId required');
         }
@@ -138,19 +129,13 @@ class UtilityFunctions {
             ...data
         };
 
-        // 🔥 DEBUG LOG
         console.log("🔥 CONTACT ID IN QUOTE:", contactId);
 
         if (contactId) {
             quoteData.SBQQ__PrimaryContact__c = contactId;
         }
 
-        const result = await this.apiRequest(
-            'post',
-            'sobjects/SBQQ__Quote__c/',
-            quoteData
-        );
-
+        const result = await this.apiRequest('post', 'sobjects/SBQQ__Quote__c/', quoteData);
         console.log("📦 QUOTE CREATED:", result);
 
         return result.id;
@@ -171,6 +156,147 @@ class UtilityFunctions {
         );
 
         console.log(`✅ Pricebook set: ${pricebookId}`);
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — DISCOUNT
+    // =========================
+    async setDiscountOnQuote(quoteId, discountPercent = 20) {
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__Quote__c/${quoteId}`,
+            { SBQQ__CustomerDiscount__c: discountPercent }
+        );
+        console.log(`✅ Discount set: ${discountPercent}%`);
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — SUBMIT FOR APPROVAL
+    // =========================
+    async submitQuoteForApproval(quoteId) {
+        const result = await this.apiRequest(
+            'post',
+            'process/approvals',
+            {
+                requests: [{
+                    actionType: 'Submit',
+                    contextId: quoteId,
+                    comments: 'Submitting for approval via automation'
+                }]
+            }
+        );
+
+        console.log(`✅ Quote submitted for approval`);
+        console.log(`📋 Approval result:`, JSON.stringify(result));
+        return result;
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — WAIT FOR APPROVAL WORKITEM
+    // =========================
+    async getApprovalWorkitemId(quoteId, retries = 10, waitMs = 3000) {
+    for (let i = 0; i < retries; i++) {
+        const result = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id+FROM+ProcessInstanceWorkitem+WHERE+ProcessInstance.TargetObjectId='${quoteId}'+LIMIT+1`
+        );
+
+        if (result.records && result.records.length > 0) {
+            const workitemId = result.records[0].Id;
+            console.log(`✅ Approval workitem found: ${workitemId}`);
+            return workitemId;
+        }
+
+        console.log(`⏳ Waiting for approval workitem... attempt ${i + 1}/${retries}`);
+        await new Promise(r => setTimeout(r, waitMs));
+    }
+
+    throw new Error('❌ Approval workitem not found after retries');
+}
+    // =========================
+    // 🆕 PHASE 3 — APPROVE QUOTE
+    // =========================
+    async approveQuote(workitemId) {
+        const result = await this.apiRequest(
+            'post',
+            'process/approvals',
+            {
+                requests: [{
+                    actionType: 'Approve',
+                    contextId: workitemId,
+                    comments: 'Approved via automation'
+                }]
+            }
+        );
+
+        console.log(`✅ Quote approved!`);
+        return result;
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — CREATE ORDER FROM QUOTE
+    // =========================
+    async createOrderFromQuote(quoteId) {
+        // Step 1: SBQQ__Ordered__c = true set karo
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__Quote__c/${quoteId}`,
+            { SBQQ__Ordered__c: true }
+        );
+
+        console.log(`✅ Quote marked as Ordered`);
+
+        // Step 2: Order fetch karo jo is quote se linked hai
+        await new Promise(r => setTimeout(r, 3000)); // Order create hone ka wait
+
+        const orderResult = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id,OrderNumber,Status+FROM+Order+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
+        );
+
+        if (!orderResult.records || orderResult.records.length === 0) {
+            throw new Error('❌ Order not found after marking quote as ordered');
+        }
+
+        const orderId = orderResult.records[0].Id;
+        const orderNumber = orderResult.records[0].OrderNumber;
+        console.log(`✅ Order created → ID: ${orderId} | Number: ${orderNumber}`);
+
+        return orderId;
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — ACTIVATE ORDER
+    // =========================
+    async activateOrder(orderId) {
+        await this.apiRequest(
+            'patch',
+            `sobjects/Order/${orderId}`,
+            { Status: 'Activated' }
+        );
+
+        console.log(`✅ Order activated!`);
+    }
+
+    // =========================
+    // 🆕 PHASE 3 — CREATE CONTRACT FROM ORDER
+    // =========================
+    async getContractFromOrder(orderId) {
+        await new Promise(r => setTimeout(r, 3000));
+
+        const result = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
+        );
+
+        if (!result.records || result.records.length === 0) {
+            console.log(`ℹ️ No contract linked to order yet`);
+            return null;
+        }
+
+        const contractId = result.records[0].Id;
+        console.log(`✅ Contract found → ID: ${contractId}`);
+        return contractId;
     }
 }
 

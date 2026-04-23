@@ -133,7 +133,7 @@ class QLEPage {
 
         await frame.locator('.slds-spinner')
             .waitFor({ state: 'hidden', timeout: 30000 })
-            .catch(() => console.log('ℹ️ Spinner nahi mila — calculation instant tha'));
+            .catch(() => console.log('ℹ️ Spinner not found — calculation instant'));
 
         console.log('✅ Pricing calculated');
     }

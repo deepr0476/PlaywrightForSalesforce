@@ -105,7 +105,7 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         await utils.activateOrder(orderId);
 
         // 3.7 Contract check karo (optional)
-        const contractId = await utils.getContractFromOrder(orderId);
+        const contractId = await utils.createContractFromOrder(orderId);
         if (contractId) {
             console.log(`✅ Contract linked → ID: ${contractId}`);
         }

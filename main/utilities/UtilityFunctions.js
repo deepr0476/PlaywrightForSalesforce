@@ -281,23 +281,34 @@ class UtilityFunctions {
     // =========================
     // 🆕 PHASE 3 — CREATE CONTRACT FROM ORDER
     // =========================
-    async getContractFromOrder(orderId) {
-        await new Promise(r => setTimeout(r, 3000));
+    async createContractFromOrder(orderId) {
+    // Order pe contracted flag set karo
+    await this.apiRequest(
+        'patch',
+        `sobjects/Order/${orderId}`,
+        { SBQQ__Contracted__c: true }
+    );
 
-        const result = await this.apiRequest(
-            'get',
-            `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
-        );
+    console.log(`✅ Contract generation triggered`);
 
-        if (!result.records || result.records.length === 0) {
-            console.log(`ℹ️ No contract linked to order yet`);
-            return null;
-        }
+    // Wait karo contract banne ka
+    await new Promise(r => setTimeout(r, 5000));
 
-        const contractId = result.records[0].Id;
-        console.log(`✅ Contract found → ID: ${contractId}`);
-        return contractId;
+    const result = await this.apiRequest(
+        'get',
+        `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
+    );
+
+    if (!result.records || result.records.length === 0) {
+        console.log(`ℹ️ Contract not generated yet`);
+        return null;
     }
+
+    const contractId = result.records[0].Id;
+    const contractNumber = result.records[0].ContractNumber;
+    console.log(`✅ Contract created → ID: ${contractId} | Number: ${contractNumber}`);
+    return contractId;
+}
 }
 
 module.exports = { UtilityFunctions };

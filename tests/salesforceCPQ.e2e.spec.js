@@ -3,12 +3,13 @@
 const { test } = require('@playwright/test');
 const { POManager } = require('../main/utilities/POManager');
 const { UtilityFunctions } = require('../main/utilities/UtilityFunctions');
+const testData = require('../main/utilities/testData');
 
-test.describe('Salesforce CPQ – API Foundation Flow', () => {
+test.describe('Salesforce CPQ – E2E Flow', () => {
 
-    test('Login → Create Account → Create Contact → Create Opportunity → Create Quote (API)', async ({ page }) => {
+    test('Account → Contact → Opportunity → Quote → Product → Approval → Order → Contract', async ({ page }) => {
 
-        const utils = new UtilityFunctions('CPQ_API_Base_Flow');
+        const utils = new UtilityFunctions('CPQ_E2E_Flow');
         const poManager = new POManager(page, utils);
 
         // =========================
@@ -29,7 +30,7 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         // 👤 CONTACT
         // =========================
         const contactData = {
-            Salutation: 'Mr.',
+            Salutation: testData.contact.salutation,
             LastName: `Contact_${Math.floor(Math.random() * 9000) + 1000}`
         };
         const contactId = await poManager.createContactHybrid(accountId, contactData, true);
@@ -63,8 +64,7 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         console.log(`✅ Quote created → ID: ${quoteId}`);
 
         await utils.setPricebookOnQuote(quoteId);
-
-        console.log('🎉 Full API flow (Account → Contact → Opportunity → Quote) completed successfully');
+        console.log('🎉 Phase 1 Complete — API flow done!');
 
         // =========================
         // 🖥️ PHASE 2 — QLE UI
@@ -74,8 +74,8 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         await qlePage.openQuoteRecord(quoteId);
         await qlePage.clickEditLines();
         await qlePage.handlePricebookDialog();
-        await qlePage.clickAddProducts();
-        await qlePage.selectProduct();
+        await qlePage.clickAddProducts();        // testData se product
+        await qlePage.selectProduct();           // testData se product
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
 
@@ -85,32 +85,31 @@ test.describe('Salesforce CPQ – API Foundation Flow', () => {
         // 🆕 PHASE 3 — DISCOUNT + APPROVAL + ORDER
         // =========================
 
-        // 3.1 Discount set karo (20% — approval trigger hogi)
-        await utils.setDiscountOnQuote(quoteId, 20);
+        // 3.1 Discount set karo (testData se)
+        await utils.setDiscountOnQuote(quoteId, testData.discount);
 
-        // 3.2 Quote submit for approval
+        // 3.2 Submit for approval
         await utils.submitQuoteForApproval(quoteId);
 
-        // 3.3 Approval workitem ka wait karo
+        // 3.3 Workitem ka wait
         const workitemId = await utils.getApprovalWorkitemId(quoteId);
 
-        // 3.4 Quote approve karo
+        // 3.4 Approve
         await utils.approveQuote(workitemId);
 
-        // 3.5 Order create karo
+        // 3.5 Order create
         const orderId = await utils.createOrderFromQuote(quoteId);
         console.log(`✅ Order created → ID: ${orderId}`);
 
-        // 3.6 Order activate karo
+        // 3.6 Order activate
         await utils.activateOrder(orderId);
 
-        // 3.7 Contract check karo (optional)
+        // 3.7 Contract (optional)
         const contractId = await utils.createContractFromOrder(orderId);
         if (contractId) {
-            console.log(`✅ Contract linked → ID: ${contractId}`);
+            console.log(`✅ Contract created → ID: ${contractId}`);
         }
 
         console.log('🎉 Phase 3 Complete — Discount → Approval → Order → Activated!');
     });
-
 });

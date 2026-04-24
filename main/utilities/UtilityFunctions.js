@@ -1,5 +1,5 @@
 // =========================
-// UtilityFunctions.js (FINAL – CPQ SAFE + CONTACT FLOW FIX + PHASE 3)
+// UtilityFunctions.js
 // =========================
 
 require('dotenv').config();
@@ -7,6 +7,7 @@ const axios = require('axios');
 const { faker } = require('@faker-js/faker');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
+const testData = require('./testData');
 
 class UtilityFunctions {
 
@@ -73,20 +74,26 @@ class UtilityFunctions {
         }
     }
 
+    // =========================
+    // 🏢 ACCOUNT
+    // =========================
     async createAccountViaAPI() {
         const res = await this.apiRequest(
             'post',
             'sobjects/Account',
-            { Name: `Account_${faker.number.int({ min: 1000, max: 9999 })}` }
+            { Name: `${testData.account.namePrefix}_${faker.number.int({ min: 1000, max: 9999 })}` }
         );
         return res.id;
     }
 
+    // =========================
+    // 👤 CONTACT
+    // =========================
     async createContactViaAPI(accountId, data = {}) {
         if (!accountId) throw new Error('accountId required');
 
         const contactData = {
-            Salutation: 'Mr.',
+            Salutation: testData.contact.salutation,
             LastName: faker.person.lastName(),
             ...data,
             AccountId: accountId
@@ -96,13 +103,16 @@ class UtilityFunctions {
         return res.id;
     }
 
+    // =========================
+    // 💼 OPPORTUNITY
+    // =========================
     async createOpportunityViaAPI(accountId) {
         const res = await this.apiRequest(
             'post',
             'sobjects/Opportunity',
             {
                 Name: `Opp_${faker.number.int({ min: 1000, max: 9999 })}`,
-                StageName: 'Prospecting',
+                StageName: testData.opportunity.stage,
                 CloseDate: new Date().toISOString().split('T')[0],
                 AccountId: accountId
             }
@@ -110,6 +120,9 @@ class UtilityFunctions {
         return res.id;
     }
 
+    // =========================
+    // 📝 QUOTE
+    // =========================
     async createQuoteViaAPI(opportunityId, accountId, contactId = null, data = null) {
         if (!opportunityId || !accountId) {
             throw new Error('opportunityId & accountId required');
@@ -117,30 +130,29 @@ class UtilityFunctions {
 
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setMonth(startDate.getMonth() + 12);
+        endDate.setMonth(startDate.getMonth() + testData.subscriptionTerm);
 
         const quoteData = {
             SBQQ__Opportunity2__c: opportunityId,
             SBQQ__Account__c: accountId,
             SBQQ__Primary__c: true,
-            SBQQ__SubscriptionTerm__c: 12,
+            SBQQ__SubscriptionTerm__c: testData.subscriptionTerm,
             SBQQ__StartDate__c: startDate.toISOString().split('T')[0],
             SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
             ...data
         };
-
-        console.log("🔥 CONTACT ID IN QUOTE:", contactId);
 
         if (contactId) {
             quoteData.SBQQ__PrimaryContact__c = contactId;
         }
 
         const result = await this.apiRequest('post', 'sobjects/SBQQ__Quote__c/', quoteData);
-        console.log("📦 QUOTE CREATED:", result);
-
         return result.id;
     }
 
+    // =========================
+    // 📚 PRICEBOOK
+    // =========================
     async setPricebookOnQuote(quoteId) {
         const pbResult = await this.apiRequest(
             'get',
@@ -159,9 +171,9 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🆕 PHASE 3 — DISCOUNT
+    // 💰 DISCOUNT
     // =========================
-    async setDiscountOnQuote(quoteId, discountPercent = 20) {
+    async setDiscountOnQuote(quoteId, discountPercent = testData.discount) {
         await this.apiRequest(
             'patch',
             `sobjects/SBQQ__Quote__c/${quoteId}`,
@@ -171,7 +183,7 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🆕 PHASE 3 — SUBMIT FOR APPROVAL
+    // ✅ SUBMIT FOR APPROVAL
     // =========================
     async submitQuoteForApproval(quoteId) {
         const result = await this.apiRequest(
@@ -187,37 +199,37 @@ class UtilityFunctions {
         );
 
         console.log(`✅ Quote submitted for approval`);
-        console.log(`📋 Approval result:`, JSON.stringify(result));
         return result;
     }
 
     // =========================
-    // 🆕 PHASE 3 — WAIT FOR APPROVAL WORKITEM
+    // ⏳ GET APPROVAL WORKITEM
     // =========================
     async getApprovalWorkitemId(quoteId, retries = 10, waitMs = 3000) {
-    for (let i = 0; i < retries; i++) {
-        const result = await this.apiRequest(
-            'get',
-            `query?q=SELECT+Id+FROM+ProcessInstanceWorkitem+WHERE+ProcessInstance.TargetObjectId='${quoteId}'+LIMIT+1`
-        );
+        for (let i = 0; i < retries; i++) {
+            const result = await this.apiRequest(
+                'get',
+                `query?q=SELECT+Id+FROM+ProcessInstanceWorkitem+WHERE+ProcessInstance.TargetObjectId='${quoteId}'+LIMIT+1`
+            );
 
-        if (result.records && result.records.length > 0) {
-            const workitemId = result.records[0].Id;
-            console.log(`✅ Approval workitem found: ${workitemId}`);
-            return workitemId;
+            if (result.records && result.records.length > 0) {
+                const workitemId = result.records[0].Id;
+                console.log(`✅ Approval workitem found: ${workitemId}`);
+                return workitemId;
+            }
+
+            console.log(`⏳ Waiting for workitem... attempt ${i + 1}/${retries}`);
+            await new Promise(r => setTimeout(r, waitMs));
         }
 
-        console.log(`⏳ Waiting for approval workitem... attempt ${i + 1}/${retries}`);
-        await new Promise(r => setTimeout(r, waitMs));
+        throw new Error('❌ Approval workitem not found after retries');
     }
 
-    throw new Error('❌ Approval workitem not found after retries');
-}
     // =========================
-    // 🆕 PHASE 3 — APPROVE QUOTE
+    // ✅ APPROVE QUOTE
     // =========================
     async approveQuote(workitemId) {
-        const result = await this.apiRequest(
+        await this.apiRequest(
             'post',
             'process/approvals',
             {
@@ -230,14 +242,12 @@ class UtilityFunctions {
         );
 
         console.log(`✅ Quote approved!`);
-        return result;
     }
 
     // =========================
-    // 🆕 PHASE 3 — CREATE ORDER FROM QUOTE
+    // 📦 CREATE ORDER
     // =========================
     async createOrderFromQuote(quoteId) {
-        // Step 1: SBQQ__Ordered__c = true set karo
         await this.apiRequest(
             'patch',
             `sobjects/SBQQ__Quote__c/${quoteId}`,
@@ -246,8 +256,7 @@ class UtilityFunctions {
 
         console.log(`✅ Quote marked as Ordered`);
 
-        // Step 2: Order fetch karo jo is quote se linked hai
-        await new Promise(r => setTimeout(r, 3000)); // Order create hone ka wait
+        await new Promise(r => setTimeout(r, 3000));
 
         const orderResult = await this.apiRequest(
             'get',
@@ -255,7 +264,7 @@ class UtilityFunctions {
         );
 
         if (!orderResult.records || orderResult.records.length === 0) {
-            throw new Error('❌ Order not found after marking quote as ordered');
+            throw new Error('❌ Order not found');
         }
 
         const orderId = orderResult.records[0].Id;
@@ -266,7 +275,7 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🆕 PHASE 3 — ACTIVATE ORDER
+    // ⚡ ACTIVATE ORDER
     // =========================
     async activateOrder(orderId) {
         await this.apiRequest(
@@ -279,36 +288,34 @@ class UtilityFunctions {
     }
 
     // =========================
-    // 🆕 PHASE 3 — CREATE CONTRACT FROM ORDER
+    // 📄 CREATE CONTRACT
     // =========================
     async createContractFromOrder(orderId) {
-    // Order pe contracted flag set karo
-    await this.apiRequest(
-        'patch',
-        `sobjects/Order/${orderId}`,
-        { SBQQ__Contracted__c: true }
-    );
+        await this.apiRequest(
+            'patch',
+            `sobjects/Order/${orderId}`,
+            { SBQQ__Contracted__c: true }
+        );
 
-    console.log(`✅ Contract generation triggered`);
+        console.log(`✅ Contract generation triggered`);
 
-    // Wait karo contract banne ka
-    await new Promise(r => setTimeout(r, 5000));
+        await new Promise(r => setTimeout(r, 5000));
 
-    const result = await this.apiRequest(
-        'get',
-        `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
-    );
+        const result = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
+        );
 
-    if (!result.records || result.records.length === 0) {
-        console.log(`ℹ️ Contract not generated yet`);
-        return null;
+        if (!result.records || result.records.length === 0) {
+            console.log(`ℹ️ Contract not generated yet`);
+            return null;
+        }
+
+        const contractId = result.records[0].Id;
+        const contractNumber = result.records[0].ContractNumber;
+        console.log(`✅ Contract created → ID: ${contractId} | Number: ${contractNumber}`);
+        return contractId;
     }
-
-    const contractId = result.records[0].Id;
-    const contractNumber = result.records[0].ContractNumber;
-    console.log(`✅ Contract created → ID: ${contractId} | Number: ${contractNumber}`);
-    return contractId;
-}
 }
 
 module.exports = { UtilityFunctions };

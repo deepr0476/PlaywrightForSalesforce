@@ -1,9 +1,9 @@
-// tests/salesforceCPQ.e2e.spec.js
+// tests/cpq/quote-with-approval.spec.js
 
 const { test } = require('@playwright/test');
-const { POManager } = require('../main/utilities/POManager');
-const { UtilityFunctions } = require('../main/utilities/UtilityFunctions');
-const testData = require('../main/utilities/testData');
+const { POManager } = require('../../main/utilities/POManager');
+const { UtilityFunctions } = require('../../main/utilities/UtilityFunctions');
+const testData = require('../../main/utilities/testData');
 
 test.describe('Salesforce CPQ – E2E Flow', () => {
 
@@ -70,12 +70,14 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // 🖥️ PHASE 2 — QLE UI
         // =========================
         const qlePage = poManager.getQLEPage();
+        const orderPage = poManager.getOrderPage();
+        const contractPage = poManager.getContractPage();
 
         await qlePage.openQuoteRecord(quoteId);
         await qlePage.clickEditLines();
         await qlePage.handlePricebookDialog();
-        await qlePage.clickAddProducts();        // testData se product
-        await qlePage.selectProduct();           // testData se product
+        await qlePage.clickAddProducts();
+        await qlePage.selectProduct();
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
 
@@ -85,7 +87,7 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // 🆕 PHASE 3 — DISCOUNT + APPROVAL + ORDER
         // =========================
 
-        // 3.1 Discount set karo (testData se)
+        // 3.1 Discount set karo
         await utils.setDiscountOnQuote(quoteId, testData.discount);
 
         // 3.2 Submit for approval
@@ -97,15 +99,15 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // 3.4 Approve
         await utils.approveQuote(workitemId);
 
-        // 3.5 Order create
-        const orderId = await utils.createOrderFromQuote(quoteId);
+        // 3.5 Order create — OrderPage se
+        const orderId = await orderPage.createOrderFromQuote(quoteId);
         console.log(`✅ Order created → ID: ${orderId}`);
 
-        // 3.6 Order activate
-        await utils.activateOrder(orderId);
+        // 3.6 Order activate — OrderPage se
+        await orderPage.activateOrder(orderId);
 
-        // 3.7 Contract (optional)
-        const contractId = await utils.createContractFromOrder(orderId);
+        // 3.7 Contract — ContractPage se
+        const contractId = await contractPage.createContractFromOrder(orderId);
         if (contractId) {
             console.log(`✅ Contract created → ID: ${contractId}`);
         }

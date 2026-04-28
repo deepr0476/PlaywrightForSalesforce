@@ -18,6 +18,9 @@ class UtilityFunctions {
         this.tokenExpiry = null;
     }
 
+    // =========================
+    // 🔐 JWT TOKEN
+    // =========================
     async getAccessToken() {
         if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
             return this.accessToken;
@@ -48,11 +51,14 @@ class UtilityFunctions {
 
         this.accessToken = res.data.access_token;
         this.instanceUrl = res.data.instance_url;
-        this.tokenExpiry = new Date(Date.now() + 55 * 60 * 1000);
+        this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
 
         return this.accessToken;
     }
 
+    // =========================
+    // 🔨 GENERIC API CALL
+    // =========================
     async apiRequest(method, endpoint, data = null) {
         const token = await this.getAccessToken();
 
@@ -153,22 +159,25 @@ class UtilityFunctions {
     // =========================
     // 📚 PRICEBOOK
     // =========================
-    async setPricebookOnQuote(quoteId) {
-        const pbResult = await this.apiRequest(
-            'get',
-            'query?q=SELECT+Id+FROM+Pricebook2+WHERE+IsStandard=true+LIMIT+1'
-        );
+    async setPricebookOnQuote(quoteId, pricebookName = testData.pricebook.name) {
+    const encodedName = encodeURIComponent(pricebookName);
+    const query = `SELECT+Id+FROM+Pricebook2+WHERE+Name='${encodedName}'+LIMIT+1`;
+    const pbResult = await this.apiRequest('get', `query?q=${query}`);
 
-        const pricebookId = pbResult.records[0].Id;
-
-        await this.apiRequest(
-            'patch',
-            `sobjects/SBQQ__Quote__c/${quoteId}`,
-            { SBQQ__PricebookId__c: pricebookId }
-        );
-
-        console.log(`✅ Pricebook set: ${pricebookId}`);
+    if (!pbResult.records?.length) {
+        throw new Error(`❌ Pricebook not found: ${pricebookName}`);
     }
+
+    const pricebookId = pbResult.records[0].Id;
+
+    await this.apiRequest(
+        'patch',
+        `sobjects/SBQQ__Quote__c/${quoteId}`,
+        { SBQQ__PricebookId__c: pricebookId }
+    );
+
+    console.log(`✅ Pricebook set: ${pricebookName}`);
+}
 
     // =========================
     // 💰 DISCOUNT
@@ -212,7 +221,7 @@ class UtilityFunctions {
                 `query?q=SELECT+Id+FROM+ProcessInstanceWorkitem+WHERE+ProcessInstance.TargetObjectId='${quoteId}'+LIMIT+1`
             );
 
-            if (result.records && result.records.length > 0) {
+            if (result.records?.length > 0) {
                 const workitemId = result.records[0].Id;
                 console.log(`✅ Approval workitem found: ${workitemId}`);
                 return workitemId;
@@ -242,79 +251,6 @@ class UtilityFunctions {
         );
 
         console.log(`✅ Quote approved!`);
-    }
-
-    // =========================
-    // 📦 CREATE ORDER
-    // =========================
-    async createOrderFromQuote(quoteId) {
-        await this.apiRequest(
-            'patch',
-            `sobjects/SBQQ__Quote__c/${quoteId}`,
-            { SBQQ__Ordered__c: true }
-        );
-
-        console.log(`✅ Quote marked as Ordered`);
-
-        await new Promise(r => setTimeout(r, 3000));
-
-        const orderResult = await this.apiRequest(
-            'get',
-            `query?q=SELECT+Id,OrderNumber,Status+FROM+Order+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
-        );
-
-        if (!orderResult.records || orderResult.records.length === 0) {
-            throw new Error('❌ Order not found');
-        }
-
-        const orderId = orderResult.records[0].Id;
-        const orderNumber = orderResult.records[0].OrderNumber;
-        console.log(`✅ Order created → ID: ${orderId} | Number: ${orderNumber}`);
-
-        return orderId;
-    }
-
-    // =========================
-    // ⚡ ACTIVATE ORDER
-    // =========================
-    async activateOrder(orderId) {
-        await this.apiRequest(
-            'patch',
-            `sobjects/Order/${orderId}`,
-            { Status: 'Activated' }
-        );
-
-        console.log(`✅ Order activated!`);
-    }
-
-    // =========================
-    // 📄 CREATE CONTRACT
-    // =========================
-    async createContractFromOrder(orderId) {
-        await this.apiRequest(
-            'patch',
-            `sobjects/Order/${orderId}`,
-            { SBQQ__Contracted__c: true }
-        );
-
-        console.log(`✅ Contract generation triggered`);
-
-        await new Promise(r => setTimeout(r, 5000));
-
-        const result = await this.apiRequest(
-            'get',
-            `query?q=SELECT+Id,ContractNumber,Status+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
-        );
-
-        if (!result.records || result.records.length === 0) {
-            console.log(`ℹ️ Contract not generated yet`);
-            return null;
-        }
-
-        const contractId = result.records[0].Id;
-        const contractNumber = result.records[0].ContractNumber;
-        console.log(`✅ Contract created → ID: ${contractId} | Number: ${contractNumber}`);
-        return contractId;
     }
 }
 

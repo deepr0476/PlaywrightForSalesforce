@@ -12,7 +12,11 @@ const config = {
     timeout: 30000
   },
 //reporter: 'html',
-reporter: [['list', { printSteps: false }]],
+reporter: [
+    ['list', { printSteps: false }],
+    ['html', { outputFolder: 'reports/html-report', open: 'never' }],
+    ['json', { outputFile: 'reports/results.json' }]
+],
 //fullyParallel: true,
 use:{
  actionTimeout: 300 * 100,

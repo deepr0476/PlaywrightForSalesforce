@@ -24,7 +24,7 @@ class QLEPage {
     await editLinesBtn.click();
     console.log('🖱️ Edit Lines clicked');
 
-    // ✅ height="100%" wala specific iframe wait karo
+    // ✅ height="100%" 
     await this.page.waitForSelector(
         'iframe[name^="vfFrameId_"][height="100%"]',
         { timeout: 30000 }

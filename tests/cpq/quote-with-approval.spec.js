@@ -88,7 +88,7 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // =========================
 
         // 3.1 Discount set karo
-        await utils.setDiscountOnQuote(quoteId, testData.discount);
+       await utils.setDiscountOnQuote(quoteId, testData.discount.withApproval);
 
         // 3.2 Submit for approval
         await utils.submitQuoteForApproval(quoteId);

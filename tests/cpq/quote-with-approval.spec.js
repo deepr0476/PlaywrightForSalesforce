@@ -29,11 +29,8 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // =========================
         // 👤 CONTACT
         // =========================
-        const contactData = {
-            Salutation: testData.contact.salutation,
-            LastName: `Contact_${Math.floor(Math.random() * 9000) + 1000}`
-        };
-        const contactId = await poManager.createContactHybrid(accountId, contactData, true);
+        
+        const contactId = await poManager.createContactHybrid(accountId, true);
         console.log(`✅ Contact created → ID: ${contactId}`);
 
         const contactInfo = await utils.apiRequest(

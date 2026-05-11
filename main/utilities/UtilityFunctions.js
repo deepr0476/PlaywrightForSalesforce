@@ -190,7 +190,33 @@ class UtilityFunctions {
         );
         console.log(`✅ Discount set: ${discountPercent}%`);
     }
+// =========================
+// 📦 SET QUANTITY ON QUOTE LINE
+// =========================
+async setQuantityOnQuoteLine(quoteId, quantity = testData.product.quantity) {
+    if (quantity <= 1) return; // Default 1 hai toh skip karo
 
+    // Quote Line fetch karo
+    const result = await this.apiRequest(
+        'get',
+        `query?q=SELECT+Id+FROM+SBQQ__QuoteLine__c+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
+    );
+
+    if (!result.records?.length) {
+        throw new Error('❌ Quote Line not found');
+    }
+
+    const quoteLineId = result.records[0].Id;
+
+    // Quantity set karo
+    await this.apiRequest(
+        'patch',
+        `sobjects/SBQQ__QuoteLine__c/${quoteLineId}`,
+        { SBQQ__Quantity__c: quantity }
+    );
+
+    console.log(`✅ Quantity set via API: ${quantity}`);
+}
     // =========================
     // ✅ SUBMIT FOR APPROVAL
     // =========================
@@ -252,6 +278,71 @@ class UtilityFunctions {
 
         console.log(`✅ Quote approved!`);
     }
+    // =========================
+// 📦 ORDER
+// =========================
+async createOrderFromQuote(quoteId) {
+    await this.apiRequest(
+        'patch',
+        `sobjects/SBQQ__Quote__c/${quoteId}`,
+        { SBQQ__Ordered__c: true }
+    );
+    console.log(`✅ Quote marked as Ordered`);
+
+    await new Promise(r => setTimeout(r, 3000));
+
+    const result = await this.apiRequest(
+        'get',
+        `query?q=SELECT+Id,OrderNumber+FROM+Order+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
+    );
+
+    if (!result.records?.length) throw new Error('❌ Order not found');
+
+    const orderId = result.records[0].Id;
+    console.log(`✅ Order created → ID: ${orderId} | Number: ${result.records[0].OrderNumber}`);
+    return orderId;
+}
+
+// =========================
+// ⚡ ACTIVATE ORDER
+// =========================
+async activateOrder(orderId) {
+    await this.apiRequest(
+        'patch',
+        `sobjects/Order/${orderId}`,
+        { Status: 'Activated' }
+    );
+    console.log(`✅ Order activated!`);
+}
+
+// =========================
+// 📄 CONTRACT
+// =========================
+async createContractFromOrder(orderId) {
+    await this.apiRequest(
+        'patch',
+        `sobjects/Order/${orderId}`,
+        { SBQQ__Contracted__c: true }
+    );
+    console.log(`✅ Contract generation triggered`);
+
+    await new Promise(r => setTimeout(r, 5000));
+
+    const result = await this.apiRequest(
+        'get',
+        `query?q=SELECT+Id,ContractNumber+FROM+Contract+WHERE+SBQQ__Order__c='${orderId}'+LIMIT+1`
+    );
+
+    if (!result.records?.length) {
+        console.log(`ℹ️ Contract not generated yet`);
+        return null;
+    }
+
+    const contractId = result.records[0].Id;
+    console.log(`✅ Contract → ID: ${contractId} | Number: ${result.records[0].ContractNumber}`);
+    return contractId;
+}
+    
 }
 
 module.exports = { UtilityFunctions };

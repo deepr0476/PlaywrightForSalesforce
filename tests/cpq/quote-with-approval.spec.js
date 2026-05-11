@@ -77,7 +77,8 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         await qlePage.selectProduct();
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
-
+        // 🆕 Quantity API se set karo — save ke baad
+       await utils.setQuantityOnQuoteLine(quoteId, testData.product.quantity);
         console.log('🎉 Phase 2 Complete — Product added, priced, and saved!');
 
         // =========================

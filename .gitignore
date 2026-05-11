@@ -1,2 +1,10 @@
+# macOS
+.DS_Store
+
+# env files
+.env
+
+# Playwright reports
+playwright-report/
 reports/
- 
+test-results/

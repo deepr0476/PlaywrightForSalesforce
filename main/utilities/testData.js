@@ -2,7 +2,8 @@
 
 module.exports = {
     product: {
-        code: process.env.PRODUCT_CODE || '10KWHBATTERY'
+        code: process.env.PRODUCT_CODE || '10KWHBATTERY',
+        quantity: parseInt(process.env.PRODUCT_QUANTITY) || 1
     },
     discount: {
         withApproval: parseFloat(process.env.DISCOUNT_WITH_APPROVAL) || 20,

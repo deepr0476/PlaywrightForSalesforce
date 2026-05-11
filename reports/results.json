@@ -91,41 +91,41 @@
                     {
                       "workerIndex": 0,
                       "status": "passed",
-                      "duration": 43011,
+                      "duration": 47001,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "Frontdoor URL: https://kns5-dev-ed.develop.my.salesforce.com/secur/frontdoor.jsp?sid=00Dak00000fAf3t!AQEAQBChROelAM2GKSe7nwqrtOdQAMzAj1br5OmQNTsONm_jX6P7wGxwejxn7hVNAQHjD6cF3FtEXIrZHtm9WkpM4zOKNOeC&retURL=/lightning/page/home\n"
+                          "text": "Frontdoor URL: https://kns5-dev-ed.develop.my.salesforce.com/secur/frontdoor.jsp?sid=00Dak00000fAf3t!AQEAQHs4W6LB0ZrkYow75cJVAvmt1lyR.fuH5U8un.ICjtPp9Kcp1U6pT6GNp1iQQXb.Gg6XYZsrIMS4MUzGbfxg1b4GCPau&retURL=/lightning/page/home\n"
                         },
                         {
-                          "text": "Current URL: https://kns5-dev-ed.develop.my.salesforce.com/secur/frontdoor.jsp?sid=00Dak00000fAf3t!AQEAQBChROelAM2GKSe7nwqrtOdQAMzAj1br5OmQNTsONm_jX6P7wGxwejxn7hVNAQHjD6cF3FtEXIrZHtm9WkpM4zOKNOeC&retURL=/lightning/page/home\n"
+                          "text": "Current URL: https://kns5-dev-ed.develop.my.salesforce.com/secur/frontdoor.jsp?sid=00Dak00000fAf3t!AQEAQHs4W6LB0ZrkYow75cJVAvmt1lyR.fuH5U8un.ICjtPp9Kcp1U6pT6GNp1iQQXb.Gg6XYZsrIMS4MUzGbfxg1b4GCPau&retURL=/lightning/page/home\n"
                         },
                         {
                           "text": "✅ Login successful\n"
                         },
                         {
-                          "text": "✅ Account created via API: 001ak00002VMGL0AAP\n"
+                          "text": "✅ Account created via API: 001ak00002XZ2I6AAL\n"
                         },
                         {
-                          "text": "✅ Account created → ID: 001ak00002VMGL0AAP\n"
+                          "text": "✅ Account created → ID: 001ak00002XZ2I6AAL\n"
                         },
                         {
-                          "text": "✅ Contact created via API: 003ak00001PPXI2AAP\n"
+                          "text": "✅ Contact created via API: 003ak00001QuOPxAAN\n"
                         },
                         {
-                          "text": "✅ Contact created → ID: 003ak00001PPXI2AAP\n"
+                          "text": "✅ Contact created → ID: 003ak00001QuOPxAAN\n"
                         },
                         {
                           "text": "🔗 Contact correctly linked to Account\n"
                         },
                         {
-                          "text": "✅ Opportunity created via API: 006ak00000StVdBAAV\n"
+                          "text": "✅ Opportunity created via API: 006ak00000TBHjBAAX\n"
                         },
                         {
-                          "text": "✅ Opportunity created → ID: 006ak00000StVdBAAV\n"
+                          "text": "✅ Opportunity created → ID: 006ak00000TBHjBAAX\n"
                         },
                         {
-                          "text": "✅ Quote created → ID: a0qak00000GfKcfAAF\n"
+                          "text": "✅ Quote created → ID: a0qak00000GrdV3AAJ\n"
                         },
                         {
                           "text": "✅ Pricebook set: Standard Price Book\n"
@@ -134,7 +134,7 @@
                           "text": "🎉 Phase 1 Complete — API flow done!\n"
                         },
                         {
-                          "text": "🌐 Opening Quote: https://kns5-dev-ed.develop.lightning.force.com/lightning/r/SBQQ__Quote__c/a0qak00000GfKcfAAF/view\n"
+                          "text": "🌐 Opening Quote: https://kns5-dev-ed.develop.lightning.force.com/lightning/r/SBQQ__Quote__c/a0qak00000GrdV3AAJ/view\n"
                         },
                         {
                           "text": "✅ Quote record page loaded\n"
@@ -170,7 +170,7 @@
                           "text": "🧮 Calculate clicked\n"
                         },
                         {
-                          "text": "ℹ️ Spinner not found — calculation instant \n"
+                          "text": "ℹ️ Spinner not found — calculation instant\n"
                         },
                         {
                           "text": "✅ Pricing calculated\n"
@@ -182,6 +182,9 @@
                           "text": "✅ Quote Lines saved successfully\n"
                         },
                         {
+                          "text": "✅ Quantity set via API: 5\n"
+                        },
+                        {
                           "text": "🎉 Phase 2 Complete — Product added, priced, and saved!\n"
                         },
                         {
@@ -191,7 +194,7 @@
                           "text": "✅ Quote submitted for approval\n"
                         },
                         {
-                          "text": "✅ Approval workitem found: 04iak000001BEgvAAG\n"
+                          "text": "✅ Approval workitem found: 04iak000001ClozAAC\n"
                         },
                         {
                           "text": "✅ Quote approved!\n"
@@ -200,10 +203,10 @@
                           "text": "✅ Quote marked as Ordered\n"
                         },
                         {
-                          "text": "✅ Order created → ID: 801ak00002VMyhBAAT | Number: 00000146\n"
+                          "text": "✅ Order created → ID: 801ak00002XZA18AAH | Number: 00000161\n"
                         },
                         {
-                          "text": "✅ Order created → ID: 801ak00002VMyhBAAT\n"
+                          "text": "✅ Order created → ID: 801ak00002XZA18AAH\n"
                         },
                         {
                           "text": "✅ Order activated!\n"
@@ -212,10 +215,10 @@
                           "text": "✅ Contract generation triggered\n"
                         },
                         {
-                          "text": "✅ Contract → ID: 800ak00002JA4ZWAA1 | Number: 00000113\n"
+                          "text": "✅ Contract → ID: 800ak00002LQecbAAD | Number: 00000127\n"
                         },
                         {
-                          "text": "✅ Contract created → ID: 800ak00002JA4ZWAA1\n"
+                          "text": "✅ Contract created → ID: 800ak00002LQecbAAD\n"
                         },
                         {
                           "text": "🎉 Phase 3 Complete — Discount → Approval → Order → Activated!\n"
@@ -223,7 +226,7 @@
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-05-06T12:13:05.494Z",
+                      "startTime": "2026-05-11T10:51:02.057Z",
                       "attachments": []
                     }
                   ],
@@ -242,8 +245,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-05-06T12:13:04.058Z",
-    "duration": 44974.071,
+    "startTime": "2026-05-11T10:51:00.603Z",
+    "duration": 49629.267,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,

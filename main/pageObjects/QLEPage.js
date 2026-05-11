@@ -17,20 +17,17 @@ class QLEPage {
     }
 
     async clickEditLines() {
-    const editLinesBtn = this.page.locator(
-        'button.slds-button:has-text("Edit Lines")'
-    );
-    await editLinesBtn.waitFor({ timeout: 20000 });
-    await editLinesBtn.click();
-    console.log('🖱️ Edit Lines clicked');
+        const editLinesBtn = this.page.locator('button.slds-button:has-text("Edit Lines")');
+        await editLinesBtn.waitFor({ timeout: 20000 });
+        await editLinesBtn.click();
+        console.log('🖱️ Edit Lines clicked');
 
-    // ✅ height="100%" 
-    await this.page.waitForSelector(
-        'iframe[name^="vfFrameId_"][height="100%"]',
-        { timeout: 30000 }
-    );
-    console.log('✅ QLE iframe detected');
-}
+        await this.page.waitForSelector(
+            'iframe[name^="vfFrameId_"][height="100%"]',
+            { timeout: 30000 }
+        );
+        console.log('✅ QLE iframe detected');
+    }
 
     async handlePricebookDialog() {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
@@ -65,7 +62,6 @@ class QLEPage {
         console.log('✅ QLE fully loaded');
     }
 
-    // 🆕 Dynamic — productCode testData se aata hai
     async clickAddProducts(productCode = product.code) {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
@@ -77,26 +73,73 @@ class QLEPage {
         console.log(`✅ Product catalog loaded — looking for: ${productCode}`);
     }
 
-    // 🆕 Dynamic — productCode testData se aata hai
-    async selectProduct(productCode = product.code) {
-        const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
+    // 🆕 quantity support added
+async selectProduct(productCode = product.code) {
+    const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
-        const productCheckbox = frame
-            .locator('sb-swipe-container')
-            .filter({ has: frame.locator(`span#me:has-text("${productCode}")`) })
-            .getByRole('checkbox');
+    // Step 1: Checkbox click
+    const productCheckbox = frame
+        .locator('sb-swipe-container')
+        .filter({ has: frame.locator(`span#me:has-text("${productCode}")`) })
+        .getByRole('checkbox');
 
-        await productCheckbox.waitFor({ timeout: 20000 });
-        await productCheckbox.click();
-        console.log(`✅ Product ${productCode} selected`);
+    await productCheckbox.waitFor({ timeout: 20000 });
+    await productCheckbox.click();
+    console.log(`✅ Product ${productCode} selected`);
 
-        await frame.locator('paper-button#plSelect').click();
-        console.log('🖱️ Select clicked — product added to QLE');
+    // Step 2: Select button pehle dabao
+    await frame.locator('paper-button#plSelect').click();
+    console.log('🖱️ Select clicked — product added to QLE');
 
-        await frame.locator(`span#me:has-text("${productCode}")`)
-            .waitFor({ timeout: 30000 });
-        console.log('✅ Product line appeared in QLE');
-    }
+    // Step 3: Product line appear hone ka wait
+    await frame.locator(`span#me:has-text("${productCode}")`)
+        .waitFor({ timeout: 30000 });
+    console.log('✅ Product line appeared in QLE');
+    /* // Step 4 - Quantiy BLock 
+   if (quantity && quantity > 1) {
+    const sbFrame = this.page.frames().find(f => f.url().includes('/apex/sb?'));
+
+    await sbFrame.evaluate((qty) => {
+        function deepQueryAll(root, selector, results = []) {
+            results.push(...root.querySelectorAll(selector));
+            for (const node of root.querySelectorAll('*')) {
+                if (node.shadowRoot) deepQueryAll(node.shadowRoot, selector, results);
+            }
+            return results;
+        }
+
+        // Step 1: Quantity cell click karo — editMode trigger hoga
+        const quantityCell = deepQueryAll(document, 'div[field="SBQQ__Quantity__c"].editable')[0];
+        if (!quantityCell) { console.log('no cell'); return; }
+        quantityCell.click();
+
+        // Step 2: editMode class aane ka wait — phir input fill karo
+        setTimeout(() => {
+            const editCell = deepQueryAll(document, 'div[field="SBQQ__Quantity__c"].editMode')[0];
+            if (!editCell) { console.log('no editMode cell'); return; }
+
+            const input = editCell.querySelector('input') || 
+                          deepQueryAll(editCell, 'input')[0];
+            if (!input) { console.log('no input'); return; }
+
+            // Native setter — Polymer ke liye zaroori
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+            ).set;
+            nativeSetter.call(input, String(qty));
+
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            input.blur();
+            console.log('quantity set to:', qty);
+        }, 800);
+
+    }, quantity);
+
+    await this.page.waitForTimeout(2000);
+    console.log(`✅ Quantity set: ${quantity}`);
+}*/
+}
 
     async clickCalculate() {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
@@ -106,7 +149,7 @@ class QLEPage {
 
         await frame.locator('.slds-spinner')
             .waitFor({ state: 'hidden', timeout: 30000 })
-            .catch(() => console.log('ℹ️ Spinner not found — calculation instant '));
+            .catch(() => console.log('ℹ️ Spinner not found — calculation instant'));
 
         console.log('✅ Pricing calculated');
     }

@@ -29,12 +29,18 @@ test.describe('Salesforce CPQ – E2E Flow Without Approval', () => {
         // =========================
         // 👤 CONTACT
         // =========================
-        const contactData = {
-            Salutation: testData.contact.salutation,
-            LastName: `Contact_${Math.floor(Math.random() * 9000) + 1000}`
-        };
-        const contactId = await poManager.createContactHybrid(accountId, contactData, true);
+       
+        const contactId = await poManager.createContactHybrid(accountId, true);
         console.log(`✅ Contact created → ID: ${contactId}`);
+         const contactInfo = await utils.apiRequest(
+            'get',
+            `sobjects/Contact/${contactId}?fields=Id,AccountId,LastName`
+        );
+        if (contactInfo.AccountId === accountId) {
+            console.log('🔗 Contact correctly linked to Account');
+        } else {
+            console.warn('⚠️ Contact not linked to Account!');
+        }
 
         // =========================
         // 💼 OPPORTUNITY
@@ -65,13 +71,15 @@ test.describe('Salesforce CPQ – E2E Flow Without Approval', () => {
         await qlePage.selectProduct();
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
+        // 🆕 Quantity API se set karo — save ke baad
+        await utils.setQuantityOnQuoteLine(quoteId, testData.product.quantity);
 
         console.log('🎉 Phase 2 Complete — Product added, priced, and saved!');
 
         // =========================
         // 🆕 PHASE 3 — LOW DISCOUNT (No Approval needed)
         // =========================
-        const lowDiscount = testData.approvalThreshold - 5; // threshold se 5% kam
+       
         await utils.setDiscountOnQuote(quoteId, testData.discount.withoutApproval);
 
         // Approval nahi lagegi — seedha Order

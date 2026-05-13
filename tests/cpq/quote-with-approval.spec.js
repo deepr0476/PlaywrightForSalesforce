@@ -29,11 +29,8 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // =========================
         // 👤 CONTACT
         // =========================
-        const contactData = {
-            Salutation: testData.contact.salutation,
-            LastName: `Contact_${Math.floor(Math.random() * 9000) + 1000}`
-        };
-        const contactId = await poManager.createContactHybrid(accountId, contactData, true);
+        
+        const contactId = await poManager.createContactHybrid(accountId, true);
         console.log(`✅ Contact created → ID: ${contactId}`);
 
         const contactInfo = await utils.apiRequest(
@@ -80,7 +77,8 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         await qlePage.selectProduct();
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
-
+        // 🆕 Quantity API se set karo — save ke baad
+       await utils.setQuantityOnQuoteLine(quoteId, testData.product.quantity);
         console.log('🎉 Phase 2 Complete — Product added, priced, and saved!');
 
         // =========================

@@ -17,20 +17,17 @@ class QLEPage {
     }
 
     async clickEditLines() {
-    const editLinesBtn = this.page.locator(
-        'button.slds-button:has-text("Edit Lines")'
-    );
-    await editLinesBtn.waitFor({ timeout: 20000 });
-    await editLinesBtn.click();
-    console.log('🖱️ Edit Lines clicked');
+        const editLinesBtn = this.page.locator('button.slds-button:has-text("Edit Lines")');
+        await editLinesBtn.waitFor({ timeout: 20000 });
+        await editLinesBtn.click();
+        console.log('🖱️ Edit Lines clicked');
 
-    // ✅ height="100%" 
-    await this.page.waitForSelector(
-        'iframe[name^="vfFrameId_"][height="100%"]',
-        { timeout: 30000 }
-    );
-    console.log('✅ QLE iframe detected');
-}
+        await this.page.waitForSelector(
+            'iframe[name^="vfFrameId_"][height="100%"]',
+            { timeout: 30000 }
+        );
+        console.log('✅ QLE iframe detected');
+    }
 
     async handlePricebookDialog() {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
@@ -65,7 +62,6 @@ class QLEPage {
         console.log('✅ QLE fully loaded');
     }
 
-    // 🆕 Dynamic — productCode testData se aata hai
     async clickAddProducts(productCode = product.code) {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
@@ -77,26 +73,30 @@ class QLEPage {
         console.log(`✅ Product catalog loaded — looking for: ${productCode}`);
     }
 
-    // 🆕 Dynamic — productCode testData se aata hai
-    async selectProduct(productCode = product.code) {
-        const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
+    // 🆕 quantity support added
+async selectProduct(productCode = product.code) {
+    const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
-        const productCheckbox = frame
-            .locator('sb-swipe-container')
-            .filter({ has: frame.locator(`span#me:has-text("${productCode}")`) })
-            .getByRole('checkbox');
+    // Step 1: Checkbox click
+    const productCheckbox = frame
+        .locator('sb-swipe-container')
+        .filter({ has: frame.locator(`span#me:has-text("${productCode}")`) })
+        .getByRole('checkbox');
 
-        await productCheckbox.waitFor({ timeout: 20000 });
-        await productCheckbox.click();
-        console.log(`✅ Product ${productCode} selected`);
+    await productCheckbox.waitFor({ timeout: 20000 });
+    await productCheckbox.click();
+    console.log(`✅ Product ${productCode} selected`);
 
-        await frame.locator('paper-button#plSelect').click();
-        console.log('🖱️ Select clicked — product added to QLE');
+    // Step 2: Select button pehle dabao
+    await frame.locator('paper-button#plSelect').click();
+    console.log('🖱️ Select clicked — product added to QLE');
 
-        await frame.locator(`span#me:has-text("${productCode}")`)
-            .waitFor({ timeout: 30000 });
-        console.log('✅ Product line appeared in QLE');
-    }
+    // Step 3: Product line appear hone ka wait
+    await frame.locator(`span#me:has-text("${productCode}")`)
+        .waitFor({ timeout: 30000 });
+    console.log('✅ Product line appeared in QLE');
+    
+}
 
     async clickCalculate() {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
@@ -106,7 +106,7 @@ class QLEPage {
 
         await frame.locator('.slds-spinner')
             .waitFor({ state: 'hidden', timeout: 30000 })
-            .catch(() => console.log('ℹ️ Spinner not found — calculation instant '));
+            .catch(() => console.log('ℹ️ Spinner not found — calculation instant'));
 
         console.log('✅ Pricing calculated');
     }

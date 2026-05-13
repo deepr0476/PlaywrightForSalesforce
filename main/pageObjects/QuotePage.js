@@ -6,34 +6,15 @@ class QuotePage {
         this.utils = utilityFunctions;
     }
 
-    /**
-     * Create Quote via API
-     * @param {String} opportunityId
-     */
-    async createQuote(opportunityId) {
-        if (!opportunityId) {
-            throw new Error('❌ opportunityId is mandatory for Quote creation');
+    async createQuote(opportunityId, accountId, contactId = null) {
+        if (!opportunityId || !accountId) {
+            throw new Error('❌ opportunityId & accountId required');
         }
-
-        const today = new Date();
-        const endDate = new Date();
-        endDate.setMonth(today.getMonth() + 12);
-
-        const quoteData = {
-            Name: `Auto Quote ${Date.now()}`,
-            SBQQ__Opportunity2__c: opportunityId,
-            SBQQ__StartDate__c: today.toISOString().split('T')[0],
-            SBQQ__EndDate__c: endDate.toISOString().split('T')[0],
-            SBQQ__Primary__c: true,
-            SBQQ__SubscriptionTerm__c: 12
-        };
- 
-        const quoteId = await this.utils.apiRequest(
-            'POST',
-            'sobjects/SBQQ__Quote__c',
-            quoteData
+        const quoteId = await this.utils.createQuoteViaAPI(
+            opportunityId,
+            accountId,
+            contactId
         );
-
         console.log(`✅ Quote created via API: ${quoteId}`);
         return quoteId;
     }

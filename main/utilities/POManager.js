@@ -13,7 +13,7 @@ class POManager {
 
     constructor(page, utilityFunctions) {
         this.page = page;
-        this.utils = utilityFunctions;
+        this.utils = utilityFunctions; 
 
         this.loginPage = new LoginPage(this.page);
         this.accountPage = new AccountPage(this.page, this.utils);

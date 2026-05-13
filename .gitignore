@@ -1,8 +1,15 @@
 # macOS
 .DS_Store
 
+# dependencies
+node_modules/
+
 # env files
 .env
+
+# certificates & keys
+*.crt
+*.key
 
 # Playwright reports
 playwright-report/

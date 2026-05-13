@@ -95,50 +95,7 @@ async selectProduct(productCode = product.code) {
     await frame.locator(`span#me:has-text("${productCode}")`)
         .waitFor({ timeout: 30000 });
     console.log('✅ Product line appeared in QLE');
-    /* // Step 4 - Quantiy BLock 
-   if (quantity && quantity > 1) {
-    const sbFrame = this.page.frames().find(f => f.url().includes('/apex/sb?'));
-
-    await sbFrame.evaluate((qty) => {
-        function deepQueryAll(root, selector, results = []) {
-            results.push(...root.querySelectorAll(selector));
-            for (const node of root.querySelectorAll('*')) {
-                if (node.shadowRoot) deepQueryAll(node.shadowRoot, selector, results);
-            }
-            return results;
-        }
-
-        // Step 1: Quantity cell click karo — editMode trigger hoga
-        const quantityCell = deepQueryAll(document, 'div[field="SBQQ__Quantity__c"].editable')[0];
-        if (!quantityCell) { console.log('no cell'); return; }
-        quantityCell.click();
-
-        // Step 2: editMode class aane ka wait — phir input fill karo
-        setTimeout(() => {
-            const editCell = deepQueryAll(document, 'div[field="SBQQ__Quantity__c"].editMode')[0];
-            if (!editCell) { console.log('no editMode cell'); return; }
-
-            const input = editCell.querySelector('input') || 
-                          deepQueryAll(editCell, 'input')[0];
-            if (!input) { console.log('no input'); return; }
-
-            // Native setter — Polymer ke liye zaroori
-            const nativeSetter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value'
-            ).set;
-            nativeSetter.call(input, String(qty));
-
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            input.blur();
-            console.log('quantity set to:', qty);
-        }, 800);
-
-    }, quantity);
-
-    await this.page.waitForTimeout(2000);
-    console.log(`✅ Quantity set: ${quantity}`);
-}*/
+    
 }
 
     async clickCalculate() {

@@ -1,15 +1,15 @@
-// tests/cpq/quote-without-approval.spec.js
+// tests/cpq/bundle.spec.js
 
 const { test } = require('@playwright/test');
 const { POManager } = require('../../main/utilities/POManager');
 const { UtilityFunctions } = require('../../main/utilities/UtilityFunctions');
 const testData = require('../../main/utilities/testData');
 
-test.describe('Salesforce CPQ – E2E Flow Without Approval', () => {
+test.describe('CPQ Flow — Bundle Product', () => {
 
-    test('Account → Contact → Opportunity → Quote → Product → Order → Contract (No Approval)', async ({ page }) => {
+    test(`Quote with Bundle Product — ${testData.activeBundleCode}`, async ({ page }) => {
 
-        const utils = new UtilityFunctions('CPQ_No_Approval_Flow');
+        const utils = new UtilityFunctions('CPQ_Bundle_Flow');
         const poManager = new POManager(page, utils);
 
         // =========================
@@ -29,18 +29,8 @@ test.describe('Salesforce CPQ – E2E Flow Without Approval', () => {
         // =========================
         // 👤 CONTACT
         // =========================
-        
-        const contactId = await poManager.createContactHybrid(accountId, true);
+        const contactId = await poManager.createContactHybrid(accountId, null, true);
         console.log(`✅ Contact created → ID: ${contactId}`);
-         const contactInfo = await utils.apiRequest(
-            'get',
-            `sobjects/Contact/${contactId}?fields=Id,AccountId,LastName`
-        );
-        if (contactInfo.AccountId === accountId) {
-            console.log('🔗 Contact correctly linked to Account');
-        } else {
-            console.warn('⚠️ Contact not linked to Account!');
-        }
 
         // =========================
         // 💼 OPPORTUNITY
@@ -63,38 +53,26 @@ test.describe('Salesforce CPQ – E2E Flow Without Approval', () => {
         // 🖥️ PHASE 2 — QLE UI
         // =========================
         const qlePage = poManager.getQLEPage();
+        const bundlePage = poManager.getBundlePage();
 
         await qlePage.openQuoteRecord(quoteId);
         await qlePage.clickEditLines();
         await qlePage.handlePricebookDialog();
-        await qlePage.clickAddProducts();
-        await qlePage.selectProduct();
+
+        // Bundle testData se aayega
+        const bundle = testData.bundles[testData.activeBundleCode];
+       await qlePage.clickAddProductsWithSearch(bundle.productCode);
+        await qlePage.selectProduct(bundle.productCode);
+         // Configure Products screen aane ka wait
+         await page.waitForTimeout(3000);
+        // Configure Products screen
+        await bundlePage.configureBundleOptions(bundle.options);
+        await bundlePage.saveBundleConfig();
+
+        // Back to QLE
         await qlePage.clickCalculate();
         await qlePage.saveQuoteLines();
-        // 🆕 Quantity API se set karo — save ke baad
-        await utils.setQuantityOnQuoteLine(quoteId, testData.product.quantity);
 
-        console.log('🎉 Phase 2 Complete — Product added, priced, and saved!');
-
-        // =========================
-        // 🆕 PHASE 3 — LOW DISCOUNT (No Approval needed)
-        // =========================
-       
-        await utils.setDiscountOnQuote(quoteId, testData.discount.withoutApproval);
-
-        // Approval nahi lagegi — seedha Order
-        const orderPage = poManager.getOrderPage();
-        const orderId = await orderPage.createOrderFromQuote(quoteId);
-        console.log(`✅ Order created → ID: ${orderId}`);
-
-        await orderPage.activateOrder(orderId);
-
-        const contractPage = poManager.getContractPage();
-        const contractId = await contractPage.createContractFromOrder(orderId);
-        if (contractId) {
-            console.log(`✅ Contract created → ID: ${contractId}`);
-        }
-
-        console.log('🎉 Phase 3 Complete — Order → Activated (No Approval needed)!');
+        console.log('🎉 Phase 2 Complete — Bundle configured and saved!');
     });
 });

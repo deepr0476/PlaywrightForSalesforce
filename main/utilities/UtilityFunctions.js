@@ -36,6 +36,7 @@ class UtilityFunctions {
             },
             privateKey,
             { algorithm: 'RS256', expiresIn: '3m' }
+
         );
 
         const res = await axios.post(
@@ -51,7 +52,7 @@ class UtilityFunctions {
 
         this.accessToken = res.data.access_token;
         this.instanceUrl = res.data.instance_url;
-        this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
+       this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
 
         return this.accessToken;
     }

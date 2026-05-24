@@ -17,6 +17,10 @@ reporter: [
     ['html', { outputFolder: 'reports/html-report', open: 'never' }],
     ['json', { outputFile: 'reports/results.json' }]
 ],
+
+//trace: 'on',
+//screenshot: 'only-on-failure',
+
 //fullyParallel: true,
 use:{
  actionTimeout: 300 * 100,

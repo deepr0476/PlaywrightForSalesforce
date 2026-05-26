@@ -38,8 +38,8 @@ module.exports = {
             options: [
                 { productCode: 'SMARTPHONEFASTCHARGER', selectionType: 'checkbox' },
                 { productCode: 'SMARTPHONEACTIVATION', selectionType: 'checkbox' },
-                { productCode: 'USBCCHARGE1M', selectionType: 'checkbox' },
-                { productCode: 'SMARTPHONECASE', selectionType: 'checkbox' }
+                { productCode: 'USBCCHARGE2M', selectionType: 'checkbox' },
+                { productCode: 'SMARTPHONEHEAVYDUTYCASE', selectionType: 'checkbox' }
             ]
         } ,            
     },

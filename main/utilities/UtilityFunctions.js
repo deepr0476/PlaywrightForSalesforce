@@ -33,6 +33,7 @@ class UtilityFunctions {
             },
             privateKey,
             { algorithm: 'RS256', expiresIn: '3m' }
+
         );
 
         const res = await axios.post(
@@ -48,7 +49,7 @@ class UtilityFunctions {
 
         this.accessToken = res.data.access_token;
         this.instanceUrl = res.data.instance_url;
-        this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
+       this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
 
         return this.accessToken;
     }
@@ -74,6 +75,7 @@ class UtilityFunctions {
         }
     }
 
+<<<<<<< HEAD
     async createAccountViaAPI() {
         const res = await this.apiRequest(
             'post',
@@ -91,14 +93,53 @@ class UtilityFunctions {
 
     async createContactViaAPI(accountId, data = {}) {
         if (!accountId) throw new Error('accountId required');
+=======
+    // =========================
+    // 🏢 ACCOUNT
+    // =========================
+   async createAccountViaAPI() {
+    const street = faker.location.streetAddress();
+    const city = faker.location.city();
+    const state = faker.location.state();
+    const zip = faker.location.zipCode();
+    const country = 'India';
+    const phone = `+91${faker.string.numeric(10)}`;  // Indian format
 
-        const contactData = {
-            Salutation: testData.contact.salutation,
-            LastName: faker.person.lastName(),
-            ...data,
-            AccountId: accountId
-        };
+    const res = await this.apiRequest(
+        'post',
+        'sobjects/Account',
+        {
+            Name: `${testData.account.namePrefix}_${faker.number.int({ min: 1000, max: 9999 })}`,
+            Phone: phone,
+            BillingStreet: street,
+            BillingCity: city,
+            BillingState: state,
+            BillingPostalCode: zip,
+            BillingCountry: country,
+            ShippingStreet: street,
+            ShippingCity: city,
+            ShippingState: state,
+            ShippingPostalCode: zip,
+            ShippingCountry: country
+        }
+    );
+    return res.id;
+}
 
+    // =========================
+    // 👤 CONTACT
+    // =========================
+   async createContactViaAPI(accountId, data = {}) {
+    if (!accountId) throw new Error('accountId required');
+>>>>>>> repo2/feature
+
+    // Account ka address fetch karo
+    const account = await this.apiRequest(
+        'get',
+        `sobjects/Account/${accountId}?fields=BillingStreet,BillingCity,BillingState,BillingPostalCode,BillingCountry,Phone`
+    );
+
+<<<<<<< HEAD
         const res = await this.apiRequest(
             'post',
             'sobjects/Contact',
@@ -107,6 +148,25 @@ class UtilityFunctions {
 
         return res.id;
     }
+=======
+    const contactData = {
+        Salutation: testData.contact.salutation,
+        LastName: faker.person.lastName(),
+        Email: faker.internet.email(),
+        Phone: account.Phone,                           // Account se same
+        MailingStreet: account.BillingStreet,           // Account Billing se
+        MailingCity: account.BillingCity,
+        MailingState: account.BillingState,
+        MailingPostalCode: account.BillingPostalCode,
+        MailingCountry: account.BillingCountry,
+        ...data,
+        AccountId: accountId
+    };
+
+    const res = await this.apiRequest('post', 'sobjects/Contact', contactData);
+    return res.id;
+}
+>>>>>>> repo2/feature
 
     async createOpportunityViaAPI(accountId) {
         const res = await this.apiRequest(

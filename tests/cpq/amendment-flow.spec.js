@@ -8,7 +8,6 @@ require('dotenv').config();
 test.describe('Salesforce CPQ – Amendment Flow (Dynamic)', () => {
 
     test('E2E → Contract → Amendment → Modify Product Quantity + Start Date', async ({ page }) => {
-
         const utils = new UtilityFunctions('CPQ_Amendment_Flow');
         const poManager = new POManager(page, utils);
 
@@ -76,7 +75,7 @@ test.describe('Salesforce CPQ – Amendment Flow (Dynamic)', () => {
                     console.log(`✅ Contract found on retry ${i} → ${contractId}`);
                     break;
                 }
-                console.log(`⏳ Waiting for Contract... attempt ${i}/6`);
+    console.log(`⏳ Waiting for Contract... attempt ${i}/6`);
             }
         }
 

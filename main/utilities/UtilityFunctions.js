@@ -1,7 +1,3 @@
-// =========================
-// UtilityFunctions.js
-// =========================
-
 require('dotenv').config();
 const axios = require('axios');
 const { faker } = require('@faker-js/faker');
@@ -33,7 +29,6 @@ class UtilityFunctions {
             },
             privateKey,
             { algorithm: 'RS256', expiresIn: '3m' }
-
         );
 
         const res = await axios.post(
@@ -49,7 +44,7 @@ class UtilityFunctions {
 
         this.accessToken = res.data.access_token;
         this.instanceUrl = res.data.instance_url;
-       this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
+        this.tokenExpiry = new Date(Date.now() + 2 * 60 * 1000);
 
         return this.accessToken;
     }
@@ -75,108 +70,73 @@ class UtilityFunctions {
         }
     }
 
-<<<<<<< HEAD
+    // =========================
+    // 🏢 ACCOUNT
+    // =========================
     async createAccountViaAPI() {
+        const street = faker.location.streetAddress();
+        const city = faker.location.city();
+        const state = faker.location.state();
+        const zip = faker.location.zipCode();
+        const country = 'India';
+        const phone = `+91${faker.string.numeric(10)}`;
+
         const res = await this.apiRequest(
             'post',
             'sobjects/Account',
             {
-                Name: `${testData.account.namePrefix}_${faker.number.int({
-                    min: 1000,
-                    max: 9999
-                })}`
+                Name: `${testData.account.namePrefix}_${faker.number.int({ min: 1000, max: 9999 })}`,
+                Phone: phone,
+                BillingStreet: street,
+                BillingCity: city,
+                BillingState: state,
+                BillingPostalCode: zip,
+                BillingCountry: country,
+                ShippingStreet: street,
+                ShippingCity: city,
+                ShippingState: state,
+                ShippingPostalCode: zip,
+                ShippingCountry: country
             }
         );
-
         return res.id;
     }
-
-    async createContactViaAPI(accountId, data = {}) {
-        if (!accountId) throw new Error('accountId required');
-=======
-    // =========================
-    // 🏢 ACCOUNT
-    // =========================
-   async createAccountViaAPI() {
-    const street = faker.location.streetAddress();
-    const city = faker.location.city();
-    const state = faker.location.state();
-    const zip = faker.location.zipCode();
-    const country = 'India';
-    const phone = `+91${faker.string.numeric(10)}`;  // Indian format
-
-    const res = await this.apiRequest(
-        'post',
-        'sobjects/Account',
-        {
-            Name: `${testData.account.namePrefix}_${faker.number.int({ min: 1000, max: 9999 })}`,
-            Phone: phone,
-            BillingStreet: street,
-            BillingCity: city,
-            BillingState: state,
-            BillingPostalCode: zip,
-            BillingCountry: country,
-            ShippingStreet: street,
-            ShippingCity: city,
-            ShippingState: state,
-            ShippingPostalCode: zip,
-            ShippingCountry: country
-        }
-    );
-    return res.id;
-}
 
     // =========================
     // 👤 CONTACT
     // =========================
-   async createContactViaAPI(accountId, data = {}) {
-    if (!accountId) throw new Error('accountId required');
->>>>>>> repo2/feature
+    async createContactViaAPI(accountId, data = {}) {
+        if (!accountId) throw new Error('accountId required');
 
-    // Account ka address fetch karo
-    const account = await this.apiRequest(
-        'get',
-        `sobjects/Account/${accountId}?fields=BillingStreet,BillingCity,BillingState,BillingPostalCode,BillingCountry,Phone`
-    );
-
-<<<<<<< HEAD
-        const res = await this.apiRequest(
-            'post',
-            'sobjects/Contact',
-            contactData
+        const account = await this.apiRequest(
+            'get',
+            `sobjects/Account/${accountId}?fields=BillingStreet,BillingCity,BillingState,BillingPostalCode,BillingCountry,Phone`
         );
 
+        const contactData = {
+            Salutation: testData.contact.salutation,
+            LastName: faker.person.lastName(),
+            Email: faker.internet.email(),
+            Phone: account.Phone,
+            MailingStreet: account.BillingStreet,
+            MailingCity: account.BillingCity,
+            MailingState: account.BillingState,
+            MailingPostalCode: account.BillingPostalCode,
+            MailingCountry: account.BillingCountry,
+            ...data,
+            AccountId: accountId
+        };
+
+        const res = await this.apiRequest('post', 'sobjects/Contact', contactData);
         return res.id;
     }
-=======
-    const contactData = {
-        Salutation: testData.contact.salutation,
-        LastName: faker.person.lastName(),
-        Email: faker.internet.email(),
-        Phone: account.Phone,                           // Account se same
-        MailingStreet: account.BillingStreet,           // Account Billing se
-        MailingCity: account.BillingCity,
-        MailingState: account.BillingState,
-        MailingPostalCode: account.BillingPostalCode,
-        MailingCountry: account.BillingCountry,
-        ...data,
-        AccountId: accountId
-    };
-
-    const res = await this.apiRequest('post', 'sobjects/Contact', contactData);
-    return res.id;
-}
->>>>>>> repo2/feature
 
     async createOpportunityViaAPI(accountId) {
         const res = await this.apiRequest(
             'post',
             'sobjects/Opportunity',
             {
-                Name: `Opp_${faker.number.int({
-                    min: 1000,
-                    max: 9999
-                })}`,
+                Name: `Opp_${faker.number.int({ min: 1000, max: 9999 })}`,
                 StageName: testData.opportunity.stage,
                 CloseDate: new Date().toISOString().split('T')[0],
                 AccountId: accountId
@@ -459,115 +419,98 @@ class UtilityFunctions {
         return contractId;
     }
 
-    // =========================
-    // ✅ Amendment fix:
-    // 1. Quote Line pe PricebookEntryId patch karo
-    // 2. Amendment Quote pe Pricebook2Id patch karo
-    // 3. Amendment Order pe Pricebook2Id patch karo
-    // Teenon zaroori hain — koi bhi ek missing hoga toh Order fail hoga
-    // QLE band hai — koi UI popup nahi aayega
-    // =========================
     async prepareAmendmentForOrdering(quoteId, startDate, pricebookName = testData.pricebook.name) {
 
-    // Step 1: Pricebook fetch karo
-    const pbResult = await this.apiRequest(
-        'get',
-        `query?q=SELECT+Id+FROM+Pricebook2+WHERE+Name='${encodeURIComponent(pricebookName)}'+LIMIT+1`
-    );
+        const pbResult = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id+FROM+Pricebook2+WHERE+Name='${encodeURIComponent(pricebookName)}'+LIMIT+1`
+        );
 
-    if (!pbResult.records?.length) {
-        throw new Error(`❌ Pricebook not found: ${pricebookName}`);
-    }
-
-    const pricebookId = pbResult.records[0].Id;
-    console.log(`🔍 Pricebook found: ${pricebookId}`);
-
-    // Step 2: Quote Line + Product fetch karo
-    const lineResult = await this.apiRequest(
-        'get',
-        `query?q=SELECT+Id,SBQQ__Product__c+FROM+SBQQ__QuoteLine__c+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
-    );
-
-    if (!lineResult.records?.length) {
-        throw new Error('❌ Amendment Quote Line not found');
-    }
-
-    const quoteLineId = lineResult.records[0].Id;
-    const productId = lineResult.records[0].SBQQ__Product__c;
-    console.log(`🔍 Quote Line: ${quoteLineId} | Product: ${productId}`);
-
-    // Step 3: PricebookEntry fetch karo
-    const pbeResult = await this.apiRequest(
-        'get',
-        `query?q=SELECT+Id+FROM+PricebookEntry+WHERE+Product2Id='${productId}'+AND+Pricebook2Id='${pricebookId}'+AND+IsActive=true+LIMIT+1`
-    );
-
-    if (!pbeResult.records?.length) {
-        throw new Error(`❌ PricebookEntry not found for Product: ${productId}`);
-    }
-
-    const pricebookEntryId = pbeResult.records[0].Id;
-    console.log(`🔍 PricebookEntry found: ${pricebookEntryId}`);
-
-    // Step 4: Quote Line pe PricebookEntryId + StartDate patch karo
-    await this.apiRequest(
-        'patch',
-        `sobjects/SBQQ__QuoteLine__c/${quoteLineId}`,
-        {
-            SBQQ__PricebookEntryId__c: pricebookEntryId,
-            SBQQ__StartDate__c: startDate
+        if (!pbResult.records?.length) {
+            throw new Error(`❌ Pricebook not found: ${pricebookName}`);
         }
-    );
-    console.log(`✅ PricebookEntryId + StartDate patched on Quote Line`);
 
-    // Step 5: Amendment Quote pe Pricebook2Id + StartDate patch karo
-    await this.apiRequest(
-        'patch',
-        `sobjects/SBQQ__Quote__c/${quoteId}`,
-        {
-            SBQQ__PricebookId__c: pricebookId,
-            SBQQ__StartDate__c: startDate
+        const pricebookId = pbResult.records[0].Id;
+        console.log(`🔍 Pricebook found: ${pricebookId}`);
+
+        const lineResult = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id,SBQQ__Product__c+FROM+SBQQ__QuoteLine__c+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
+        );
+
+        if (!lineResult.records?.length) {
+            throw new Error('❌ Amendment Quote Line not found');
         }
-    );
-    console.log(`✅ Pricebook2Id + StartDate patched on Amendment Quote`);
 
-    // Step 6: Ordered = true
-    await this.apiRequest(
-        'patch',
-        `sobjects/SBQQ__Quote__c/${quoteId}`,
-        { SBQQ__Ordered__c: true }
-    );
-    console.log(`✅ Amendment Quote marked as Ordered`);
+        const quoteLineId = lineResult.records[0].Id;
+        const productId = lineResult.records[0].SBQQ__Product__c;
+        console.log(`🔍 Quote Line: ${quoteLineId} | Product: ${productId}`);
 
-    await new Promise(r => setTimeout(r, 8000));
+        const pbeResult = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id+FROM+PricebookEntry+WHERE+Product2Id='${productId}'+AND+Pricebook2Id='${pricebookId}'+AND+IsActive=true+LIMIT+1`
+        );
 
-    // Step 7: Order fetch karo
-    const orderResult = await this.apiRequest(
-        'get',
-        `query?q=SELECT+Id,OrderNumber+FROM+Order+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
-    );
+        if (!pbeResult.records?.length) {
+            throw new Error(`❌ PricebookEntry not found for Product: ${productId}`);
+        }
 
-    if (!orderResult.records?.length) {
-        throw new Error('❌ Amended Order not found after Ordered = true');
+        const pricebookEntryId = pbeResult.records[0].Id;
+        console.log(`🔍 PricebookEntry found: ${pricebookEntryId}`);
+
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__QuoteLine__c/${quoteLineId}`,
+            {
+                SBQQ__PricebookEntryId__c: pricebookEntryId,
+                SBQQ__StartDate__c: startDate
+            }
+        );
+        console.log(`✅ PricebookEntryId + StartDate patched on Quote Line`);
+
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__Quote__c/${quoteId}`,
+            {
+                SBQQ__PricebookId__c: pricebookId,
+                SBQQ__StartDate__c: startDate
+            }
+        );
+        console.log(`✅ Pricebook2Id + StartDate patched on Amendment Quote`);
+
+        await this.apiRequest(
+            'patch',
+            `sobjects/SBQQ__Quote__c/${quoteId}`,
+            { SBQQ__Ordered__c: true }
+        );
+        console.log(`✅ Amendment Quote marked as Ordered`);
+
+        await new Promise(r => setTimeout(r, 8000));
+
+        const orderResult = await this.apiRequest(
+            'get',
+            `query?q=SELECT+Id,OrderNumber+FROM+Order+WHERE+SBQQ__Quote__c='${quoteId}'+LIMIT+1`
+        );
+
+        if (!orderResult.records?.length) {
+            throw new Error('❌ Amended Order not found after Ordered = true');
+        }
+
+        const orderId = orderResult.records[0].Id;
+        console.log(`✅ Amended Order → ID: ${orderId} | Number: ${orderResult.records[0].OrderNumber}`);
+
+        await this.apiRequest(
+            'patch',
+            `sobjects/Order/${orderId}`,
+            {
+                Pricebook2Id: pricebookId,
+                EffectiveDate: startDate
+            }
+        );
+        console.log(`✅ Pricebook2Id + EffectiveDate(StartDate) patched on Amended Order`);
+
+        return orderId;
     }
-
-    const orderId = orderResult.records[0].Id;
-    console.log(`✅ Amended Order → ID: ${orderId} | Number: ${orderResult.records[0].OrderNumber}`);
-
-    // Step 8: Order pe Pricebook2Id + EffectiveDate patch karo
-    // EffectiveDate = Order Start Date ka actual API field name
-    await this.apiRequest(
-        'patch',
-        `sobjects/Order/${orderId}`,
-        {
-            Pricebook2Id: pricebookId,
-            EffectiveDate: startDate
-        }
-    );
-    console.log(`✅ Pricebook2Id + EffectiveDate(StartDate) patched on Amended Order`);
-
-    return orderId;
-}
 }
 
 module.exports = { UtilityFunctions };

@@ -1,5 +1,3 @@
-// main/utilities/POManager.js
-
 const { LoginPage } = require('../pageObjects/LoginPage');
 const { OpportunityPage } = require('../pageObjects/OpportunityPage');
 const { QuotePage } = require('../pageObjects/QuotePage');
@@ -29,16 +27,16 @@ class POManager {
         this.bundlePage = new BundlePage(this.page);
     }
 
-    getLoginPage() { return this.loginPage; }
-    getAccountPage() { return this.accountPage; }
+    getLoginPage()       { return this.loginPage; }
+    getAccountPage()     { return this.accountPage; }
     getOpportunityPage() { return this.opportunityPage; }
-    getQuotePage() { return this.quotePage; }
-    getContactPage() { return this.contactPage; }
-    getQLEPage() { return this.qlePage; }
-    getOrderPage() { return this.orderPage; }
-    getContractPage() { return this.contractPage; }
-    getAmendmentPage() { return this.amendmentPage; }
-    getBundlePage() { return this.bundlePage; }
+    getQuotePage()       { return this.quotePage; }
+    getContactPage()     { return this.contactPage; }
+    getQLEPage()         { return this.qlePage; }
+    getOrderPage()       { return this.orderPage; }
+    getContractPage()    { return this.contractPage; }
+    getAmendmentPage()   { return this.amendmentPage; }
+    getBundlePage()      { return this.bundlePage; }
 
     async createAccountHybrid(useAPI = true) {
         return await this.accountPage.createAccount(null, useAPI);

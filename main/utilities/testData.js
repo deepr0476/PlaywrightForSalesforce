@@ -6,14 +6,14 @@ module.exports = {
     // 🛒 SIMPLE PRODUCT
     // =========================
     product: {
-<<<<<<< HEAD
+
         code: process.env.PRODUCT_CODE || '10KWHBATTERY',
         quantity: parseInt(process.env.PRODUCT_QUANTITY) || 1,
-        amendmentQuantity: Number(process.env.AMENDMENT_PRODUCT_QUANTITY || 7)
-=======
+        amendmentQuantity: Number(process.env.AMENDMENT_PRODUCT_QUANTITY || 7),
+
         code: process.env.PRODUCT_CODE || 'CLOUDSTORAGE',
         quantity: parseInt(process.env.PRODUCT_QUANTITY) || 1
->>>>>>> repo2/feature
+
     },
 
     // =========================

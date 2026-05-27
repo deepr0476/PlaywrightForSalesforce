@@ -32,6 +32,10 @@ class QLEPage {
         console.log('✅ QLE iframe detected');
     }
 
+    // ── FIX 1: sbFrame was used before being declared. ──────────────────────────
+    // The merge left an orphaned `if (sbFrame)` block from one branch inside a
+    // method that never declared sbFrame. Fixed by fetching sbFrame first, then
+    // conditionally using it (same pattern as forceClosePricebookPopup).
     async handlePricebookDialog() {
         await this.forceClosePricebookPopup();
 
@@ -43,8 +47,8 @@ class QLEPage {
             .getByRole('button', { name: 'Add Products' })
             .waitFor({ timeout: 60000 });
 
-<<<<<<< HEAD
-=======
+        const sbFrame = this.page.frames().find(f => f.url().includes('/apex/sb?'));
+
         if (sbFrame) {
             const clicked = await sbFrame.evaluate(() => {
                 function deepFindAll(root, selector, results = []) {
@@ -69,7 +73,6 @@ class QLEPage {
         await frame.getByRole('button', { name: 'Add Products' })
             .waitFor({ timeout: 30000 });
 
->>>>>>> repo2/feature
         console.log('✅ QLE fully loaded');
     }
 
@@ -139,6 +142,7 @@ class QLEPage {
         }
     }
 
+    // Used by amendment-flow.spec.js — unchanged
     async clickAddProducts(productCode = product.code) {
         const frame = this.page.frameLocator(
             'iframe[name^="vfFrameId_"][height="100%"]'
@@ -157,18 +161,13 @@ class QLEPage {
         console.log(`✅ Product catalog loaded — looking for: ${productCode}`);
     }
 
-<<<<<<< HEAD
-    async selectProduct(productCode = product.code) {
-        const frame = this.page.frameLocator(
-            'iframe[name^="vfFrameId_"][height="100%"]'
-        );
-
-        const productCheckbox = frame
-            .locator('sb-swipe-container')
-            .filter({
-                has: frame.locator(`span#me:has-text("${productCode}")`)
-            })
-=======
+    // ── FIX 2: Used by bundle.spec.js ───────────────────────────────────────────
+    // The merge dropped the closing }) and } of the filter() chain on the FIRST
+    // (incomplete) selectProduct, then immediately started clickAddProductsWithSearch
+    // without a closing brace for selectProduct. This entire first selectProduct
+    // stub was dead/duplicate code — the SECOND selectProduct (labelled
+    // "🆕 quantity support added") is the complete, correct implementation from
+    // the feature branch. The stub is removed; only the full version is kept.
     async clickAddProductsWithSearch(productCode) {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
@@ -180,7 +179,7 @@ class QLEPage {
         const sbFrame = this.page.frames().find(f => f.url().includes('/apex/sb?'));
         if (!sbFrame) throw new Error('❌ QLE frame not found');
 
-        // Step 1: Visible search input fill karo
+        // Step 1: Fill the visible search input
         const fillResult = await sbFrame.evaluate((code) => {
             function deepFindAll(root, selector, results = []) {
                 results.push(...root.querySelectorAll(selector));
@@ -193,7 +192,6 @@ class QLEPage {
             const inputs = deepFindAll(document, 'input#itemLabel')
                 .filter(i => i.placeholder === 'Search Products');
 
-            // Visible wala input — offsetParent !== null
             const input = inputs.find(i => i.offsetParent !== null);
             if (!input) return 'input-not-found';
 
@@ -214,31 +212,30 @@ class QLEPage {
         console.log(`🔍 Search input result: ${fillResult}`);
         await this.page.waitForTimeout(1000);
 
-        // Step 2: Search button click karo
-const searchResult = await sbFrame.evaluate(() => {
-    function deepFindAll(root, selector, results = []) {
-        results.push(...root.querySelectorAll(selector));
-        for (const node of root.querySelectorAll('*')) {
-            if (node.shadowRoot) deepFindAll(node.shadowRoot, selector, results);
-        }
-        return results;
-    }
+        // Step 2: Click the search button
+        const searchResult = await sbFrame.evaluate(() => {
+            function deepFindAll(root, selector, results = []) {
+                results.push(...root.querySelectorAll(selector));
+                for (const node of root.querySelectorAll('*')) {
+                    if (node.shadowRoot) deepFindAll(node.shadowRoot, selector, results);
+                }
+                return results;
+            }
 
-    // id="search" wala visible button
-    const searchBtns = deepFindAll(document, 'paper-button#search')
-        .filter(btn => btn.offsetParent !== null);
+            const searchBtns = deepFindAll(document, 'paper-button#search')
+                .filter(btn => btn.offsetParent !== null);
 
-    const btn = searchBtns[0];
-    if (!btn) return 'btn-not-found';
+            const btn = searchBtns[0];
+            if (!btn) return 'btn-not-found';
 
-    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
-    return 'clicked';
-});
+            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+            return 'clicked';
+        });
 
         console.log(`🔍 Search button result: ${searchResult}`);
         await this.page.waitForTimeout(2000);
 
-        // Step 3: Product appear hone ka wait
+        // Step 3: Wait for product to appear
         let found = false;
         for (let i = 0; i < 15; i++) {
             found = await sbFrame.evaluate((code) => {
@@ -262,38 +259,31 @@ const searchResult = await sbFrame.evaluate(() => {
         console.log(`✅ Product found: ${productCode}`);
     }
 
-    // 🆕 quantity support added
+    // ── FIX 3: Duplicate selectProduct resolved ──────────────────────────────────
+    // Repo 1 had an incomplete stub (no .getByRole, no click, no await).
+    // Repo 2 had the full implementation with .getByRole('checkbox'), click,
+    // plSelect, and waitFor. The complete version from Repo 2 is kept.
+    // The duplicate internal log + plSelect click that existed inside the
+    // second copy are also deduplicated here — kept only the final .first()
+    // waitFor pattern which is the most defensive.
     async selectProduct(productCode = product.code) {
         const frame = this.page.frameLocator('iframe[name^="vfFrameId_"][height="100%"]');
 
         const productCheckbox = frame
             .locator('sb-swipe-container')
             .filter({ has: frame.locator(`span#me:has-text("${productCode}")`) })
->>>>>>> repo2/feature
             .getByRole('checkbox');
 
         await productCheckbox.waitFor({ timeout: 20000 });
         await productCheckbox.click();
-<<<<<<< HEAD
 
-        console.log(`✅ Product ${productCode} selected`);
-
-        await frame.locator('paper-button#plSelect').click();
-
-        console.log('🖱️ Select clicked — product added to QLE');
-
-        await frame
-            .locator(`span#me:has-text("${productCode}")`)
-            .waitFor({ timeout: 30000 });
-
-=======
         console.log(`✅ Product ${productCode} selected`);
 
         await frame.locator('paper-button#plSelect').click();
         console.log('🖱️ Select clicked — product added to QLE');
 
         await frame.locator(`span#me:has-text("${productCode}")`).first().waitFor({ timeout: 30000 });
->>>>>>> repo2/feature
+
         console.log('✅ Product line appeared in QLE');
     }
 

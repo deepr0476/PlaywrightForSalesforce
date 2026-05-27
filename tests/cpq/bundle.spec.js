@@ -8,7 +8,6 @@ const testData = require('../../main/utilities/testData');
 test.describe('CPQ Flow — Bundle Product', () => {
 
     test(`Quote with Bundle Product — ${testData.activeBundleCode}`, async ({ page }) => {
-
         const utils = new UtilityFunctions('CPQ_Bundle_Flow');
         const poManager = new POManager(page, utils);
 

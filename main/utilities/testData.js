@@ -21,34 +21,33 @@ module.exports = {
     // =========================
     activeBundleCode: process.env.BUNDLE_PRODUCT_CODE || 'LAPTOP13',
 
-    bundles: {
-        LAPTOP13: {
-            productCode: 'LAPTOP13',
-            options: [
-                { productCode: 'CPU16GHZI5', selectionType: 'radio' },
-                { productCode: 'RAM16GB', selectionType: 'radio' },
-                { productCode: 'SSD128', selectionType: 'radio' }
-            ]
-        },
-        LAPTOP15: {
-              productCode: 'LAPTOP15',
-          options: [
-        { productCode: 'CPU25GHZI7', selectionType: 'radio' },
-        { productCode: 'RAM16GB', selectionType: 'radio' },
-        { productCode: 'SSD512', selectionType: 'radio' }
-         ]
-        },
-        
-        SMARTPHONE6: {
-            productCode: 'SMARTPHONE6',
-            options: [
-                { productCode: 'SMARTPHONEFASTCHARGER', selectionType: 'checkbox' },
-                { productCode: 'SMARTPHONEACTIVATION', selectionType: 'checkbox' },
-                { productCode: 'USBCCHARGE2M', selectionType: 'checkbox' },
-                { productCode: 'SMARTPHONEHEAVYDUTYCASE', selectionType: 'checkbox' }
-            ]
-        } ,            
+   bundles: {
+    LAPTOP13: {
+        productCode: 'LAPTOP13',
+        options: [
+            { productCode: 'CPU16GHZI5', selectionType: 'radio', quantity: 1 },
+            { productCode: 'RAM16GB', selectionType: 'radio', quantity: 1 },
+            { productCode: 'SSD128', selectionType: 'radio', quantity: 1 }
+        ]
     },
+    LAPTOP15: {
+        productCode: 'LAPTOP15',
+        options: [
+            { productCode: 'CPU25GHZI7', selectionType: 'radio', quantity: 1 },
+            { productCode: 'RAM16GB', selectionType: 'radio', quantity: 1 },
+            { productCode: 'SSD512', selectionType: 'radio', quantity: 1 }
+        ]
+    },
+    SMARTPHONE6: {
+        productCode: 'SMARTPHONE6',
+        options: [
+            { productCode: 'SMARTPHONEFASTCHARGER', selectionType: 'checkbox', quantity: 2 },
+            { productCode: 'SMARTPHONEACTIVATION', selectionType: 'checkbox', quantity: 1 },
+            { productCode: 'USBCCHARGE2M', selectionType: 'checkbox', quantity: 3 },
+            { productCode: 'SMARTPHONEHEAVYDUTYCASE', selectionType: 'checkbox', quantity: 1 }
+        ]
+    }
+},
 
     // =========================
     // 💰 DISCOUNT

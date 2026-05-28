@@ -87,6 +87,7 @@ class BundlePage {
     }
     console.log(`✅ Radio selected: ${productCode}`);
 }
+
     // =========================
     // ☑️ SELECT CHECKBOX OPTION
     // =========================
@@ -113,18 +114,146 @@ class BundlePage {
     }
     console.log(`✅ Checkbox selected: ${productCode}`);
 }
-    
+
+    // =========================
+    // 🔢 SET OPTION QUANTITY
+    // =========================
+    async setOptionQuantity(productCode, quantity) {
+
+        if (!quantity || quantity === 1) return;
+
+        const sbFrame = this.page.frames().find(f =>
+            f.url().includes('/apex/sb?') && f.url().includes('sbqq')
+        );
+
+        if (!sbFrame) {
+            throw new Error('❌ Configure Products frame not found');
+        }
+
+        const result = await sbFrame.evaluate(({ code, qty }) => {
+
+            function deepFindAll(root, selector, results) {
+
+                results = results || [];
+
+                var found = root.querySelectorAll(selector);
+
+                for (var i = 0; i < found.length; i++) {
+                    results.push(found[i]);
+                }
+
+                var all = root.querySelectorAll('*');
+
+                for (var j = 0; j < all.length; j++) {
+                    if (all[j].shadowRoot) {
+                        deepFindAll(all[j].shadowRoot, selector, results);
+                    }
+                }
+
+                return results;
+            }
+
+            // Product row find
+            var allSpans = deepFindAll(document, 'span#me');
+
+            var targetSpan = null;
+
+            for (var i = 0; i < allSpans.length; i++) {
+                if (allSpans[i].textContent.trim() === code) {
+                    targetSpan = allSpans[i];
+                    break;
+                }
+            }
+
+            if (!targetSpan) return 'span-not-found';
+
+            // Find SB-SWIPE-CONTAINER
+            var node = targetSpan;
+            var swipeContainer = null;
+
+            for (var j = 0; j < 15; j++) {
+
+                if (!node) break;
+
+                if (node.tagName === 'SB-SWIPE-CONTAINER') {
+                    swipeContainer = node;
+                    break;
+                }
+
+                node = node.parentElement ||
+                       (node.getRootNode && node.getRootNode().host);
+            }
+
+            if (!swipeContainer) return 'swipe-container-not-found';
+
+            // Quantity input
+            var inputs = deepFindAll(
+                swipeContainer,
+                'input.numberInput'
+            );
+
+            var qtyInput = inputs.find(function(el) {
+                return el.offsetParent !== null;
+            });
+
+            if (!qtyInput) return 'qty-input-not-found';
+
+            qtyInput.focus();
+
+            // Clear existing value
+            qtyInput.value = '';
+
+            // Set new value
+            qtyInput.value = qty.toString();
+
+            qtyInput.dispatchEvent(
+                new Event('input', { bubbles: true })
+            );
+
+            qtyInput.dispatchEvent(
+                new Event('change', { bubbles: true })
+            );
+
+            qtyInput.blur();
+
+            return 'quantity-set';
+
+        }, { code: productCode, qty: quantity });
+
+        if (result !== 'quantity-set') {
+            throw new Error(
+                `❌ Quantity set failed for ${productCode}: ${result}`
+            );
+        }
+
+        console.log(`🔢 Quantity set: ${productCode} = ${quantity}`);
+
+        await this.page.waitForTimeout(1000);
+    }
+
     // ⚙️ CONFIGURE BUNDLE
-    
+
     async configureBundleOptions(options) {
         for (const option of options) {
+
             if (option.selectionType === 'radio') {
                 await this.selectRadioOption(option.productCode);
+
             } else if (option.selectionType === 'checkbox') {
                 await this.selectCheckboxOption(option.productCode);
             }
+
+            // 🔢 Set quantity if provided
+            if (option.quantity && option.quantity > 1) {
+                await this.setOptionQuantity(
+                    option.productCode,
+                    option.quantity
+                );
+            }
+
             await this.page.waitForTimeout(500);
         }
+
         console.log('✅ All bundle options configured');
     }
 

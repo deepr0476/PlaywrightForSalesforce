@@ -15,7 +15,8 @@ const config = {
 reporter: [
     ['list', { printSteps: false }],
     ['html', { outputFolder: 'reports/html-report', open: 'never' }],
-    ['json', { outputFile: 'reports/results.json' }]
+    ['json', { outputFile: 'reports/results.json' }],
+    ['allure-playwright',{outputFolder: 'my-allure-results'}]
 ],
 
 //trace: 'on',

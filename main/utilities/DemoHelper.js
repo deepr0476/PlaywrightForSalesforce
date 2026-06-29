@@ -4,88 +4,78 @@ class DemoHelper {
     this.page = page;
   }
 
-  // ============================================
-  // INJECT OVERLAY (SAFE + LIGHTWEIGHT)
-  // ============================================
-
   async injectOverlay() {
-
     try {
-
       await this.page.evaluate(() => {
 
+        // Prevent duplicate overlay
         if (document.getElementById('cpq-demo-overlay')) return;
 
         const overlay = document.createElement('div');
-
         overlay.id = 'cpq-demo-overlay';
 
         overlay.innerHTML = `
-          <div id="cpq-demo-phase">
-            🚀 SALESFORCE CPQ DEMO
-          </div>
-          <div id="cpq-demo-step">
-            Initializing...
-          </div>
+          <div id="cpq-demo-phase">🚀 SALESFORCE CPQ DEMO</div>
+          <div id="cpq-demo-step">Initializing...</div>
         `;
 
         Object.assign(overlay.style, {
 
           position: 'fixed',
-          top: '16px',
-          left: '50%',
+
+          // 👇 aur upar le gaye
+          top: '14px',
+
+          // 👇 slightly left aligned
+          left: '48.5%',
+
           transform: 'translateX(-50%)',
 
-          width: '55%',
-          minHeight: '90px',
+          // 👇 box thoda bada
+          width: '42%',
+          minHeight: '72px',
 
-          padding: '14px 20px',
+          // 👇 more spacing for text visibility
+          padding: '10px 18px',
 
-          background: 'rgba(0,0,0,0.88)',
-
-          border: '2px solid #00ffcc',
-
+          background: 'rgba(226, 94, 0, 0.96)',
+          border: '2px solid #FF8C00',
           borderRadius: '14px',
 
           zIndex: '999999',
 
           color: '#ffffff',
-
           fontFamily: 'Arial, sans-serif',
 
-          backdropFilter: 'blur(8px)',
+          backdropFilter: 'blur(5px)',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.24)',
 
-          boxShadow: '0 0 18px rgba(0,255,204,0.35)',
+          textAlign: 'center',
 
-          textAlign: 'center'
+          transition: 'all 0.25s ease'
         });
 
+        // Header styling
         const phase = overlay.querySelector('#cpq-demo-phase');
 
         Object.assign(phase.style, {
-
-          fontSize: '26px',
-
-          fontWeight: 'bold',
-
-          color: '#00ffcc',
-
-          marginBottom: '8px',
-
-          letterSpacing: '0.5px'
+          fontSize: '18px',
+          fontWeight: '700',
+          color: '#ffffff',
+          marginBottom: '4px',
+          letterSpacing: '0.3px',
+          lineHeight: '1.3'
         });
 
+        // 👇 black text more visible
         const step = overlay.querySelector('#cpq-demo-step');
 
         Object.assign(step.style, {
-
-          fontSize: '20px',
-
-          fontWeight: '500',
-
-          color: '#ffffff',
-
-          lineHeight: '1.4'
+          fontSize: '15px',
+          fontWeight: '700',
+          color: '#000000',
+          lineHeight: '1.35',
+          textShadow: '0 0 1px rgba(255,255,255,0.3)'
         });
 
         document.body.appendChild(overlay);
@@ -93,30 +83,17 @@ class DemoHelper {
       });
 
     } catch (e) {
-
       console.log('Overlay inject skipped due to navigation');
     }
   }
 
-  // ============================================
-  // ENSURE OVERLAY EXISTS (NAV SAFE)
-  // ============================================
-
   async ensureOverlay() {
-
     try {
-
       await this.injectOverlay();
-
     } catch (e) {
-
-      // ignore navigation flicker
+      // Ignore navigation flicker
     }
   }
-
-  // ============================================
-  // SHOW STEP (MAIN NARRATION)
-  // ============================================
 
   async showStep(message, wait = 2000) {
 
@@ -129,14 +106,12 @@ class DemoHelper {
         const step = document.getElementById('cpq-demo-step');
 
         if (step) {
-
           step.innerHTML = `✨ ${msg}`;
         }
 
       }, message);
 
     } catch (e) {
-
       console.log('Step render skipped');
     }
 
@@ -144,10 +119,6 @@ class DemoHelper {
 
     await this.page.waitForTimeout(wait);
   }
-
-  // ============================================
-  // SHOW PHASE (BIG HEADER CHANGE)
-  // ============================================
 
   async showPhase(title) {
 
@@ -158,7 +129,6 @@ class DemoHelper {
       await this.page.evaluate((phaseTitle) => {
 
         const phase = document.getElementById('cpq-demo-phase');
-
         const step = document.getElementById('cpq-demo-step');
 
         if (phase) {
@@ -172,18 +142,13 @@ class DemoHelper {
       }, title);
 
     } catch (e) {
-
       console.log('Phase render skipped');
     }
 
     console.log(`🚀 ${title}`);
 
-    await this.page.waitForTimeout(3000);
+    await this.page.waitForTimeout(2500);
   }
-
-  // ============================================
-  // ELEMENT HIGHLIGHT (OPTIONAL USE LATER)
-  // ============================================
 
   async highlightElement(locator) {
 
@@ -192,19 +157,14 @@ class DemoHelper {
       await locator.evaluate((el) => {
 
         el.style.transition = 'all 0.25s ease';
-
-        el.style.boxShadow = '0 0 18px #00ffcc';
-
-        el.style.border = '2px solid #00ffcc';
-
+        el.style.boxShadow = '0 0 18px #FF8C00';
+        el.style.border = '2px solid #FF8C00';
         el.style.position = 'relative';
-
         el.style.zIndex = '9999';
 
       });
 
     } catch (e) {
-
       console.log('Highlight skipped');
     }
 

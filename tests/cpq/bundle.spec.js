@@ -73,5 +73,38 @@ test.describe('CPQ Flow — Bundle Product', () => {
         await qlePage.saveQuoteLines();
 
         console.log('🎉 Phase 2 Complete — Bundle configured and saved!');
-    });
-});
+
+
+        // 🆕 PHASE 3 — LOW DISCOUNT (No Approval needed) // 
+                // =========================
+               
+                await utils.setDiscountOnQuote(quoteId, testData.discount.withoutApproval);
+                await utils.closeOpportunityAsWon(opportunityId);
+        
+                // 🔍 VERIFY Opportunity Stage
+               const oppData = await utils.apiRequest(
+                 'get',
+                `sobjects/Opportunity/${opportunityId}?fields=Id,StageName`
+        );
+        
+        console.log(`🔎 Opportunity Stage after update: ${oppData.StageName}`);
+                
+        
+                // Approval nahi lagegi — seedha Order
+                const orderPage = poManager.getOrderPage();
+                const orderId = await orderPage.createOrderFromQuote(quoteId);
+                console.log(`✅ Order created → ID: ${orderId}`);
+        
+                await orderPage.activateOrder(orderId);
+        
+                const contractPage = poManager.getContractPage();
+                const contractId = await contractPage.createContractFromOrder(orderId);
+                if (contractId) {
+                    console.log(`✅ Contract created → ID: ${contractId}`);
+                }
+        
+                console.log('🎉 Phase 3 Complete — Order → Activated (No Approval needed)!');
+            });
+        });
+
+    

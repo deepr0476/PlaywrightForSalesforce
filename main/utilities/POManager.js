@@ -8,7 +8,7 @@ const { OrderPage } = require('../pageObjects/OrderPage');
 const { ContractPage } = require('../pageObjects/ContractPage');
 const { AmendmentPage } = require('../pageObjects/AmendmentPage');
 const { BundlePage } = require('../pageObjects/BundlePage');
-
+ 
 class POManager {
 
     constructor(page, utilityFunctions) {

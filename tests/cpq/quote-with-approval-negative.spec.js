@@ -1,6 +1,4 @@
-// tests/cpq/quote-with-approval.spec.js
-
-
+// tests/cpq/quote-with-approval-negative.spec.js 
 const { test } = require('@playwright/test');
 const { POManager } = require('../../main/utilities/POManager');
 const { UtilityFunctions } = require('../../main/utilities/UtilityFunctions');
@@ -14,7 +12,7 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         const poManager = new POManager(page, utils);
 
         // =========================
-        // 🔐 LOGIN
+        // 🔐 LOGIN // 
         // =========================
         const loginPage = poManager.getLoginPage();
         const accessToken = await utils.getAccessToken();
@@ -87,7 +85,7 @@ test.describe('Salesforce CPQ – E2E Flow', () => {
         // =========================
 
         // 3.1 Discount set karo
-       await utils.setDiscountOnQuote(quoteId, testData.discount.withApproval);
+       await utils.setDiscountOnQuote(quoteId, testData.discount.withoutApproval);
 
         // 3.2 Submit for approval
         await utils.submitQuoteForApproval(quoteId);
